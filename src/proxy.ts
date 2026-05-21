@@ -36,7 +36,7 @@ export function proxy(request: NextRequest) {
   )
 
   return supabase.auth.getUser().then(({ data: { user } }) => {
-    if (!user && pathname !== '/login' && !pathname.startsWith('/auth')) {
+    if (!user && pathname !== '/login' && pathname !== '/inscription' && !pathname.startsWith('/auth')) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
 

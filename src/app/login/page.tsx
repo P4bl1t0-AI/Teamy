@@ -64,6 +64,16 @@ export default function LoginPage() {
               {loading ? 'Connexion...' : 'Se connecter'}
             </Button>
           </form>
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            Pas encore de compte ?{' '}
+            <button
+              type="button"
+              onClick={() => router.push('/inscription')}
+              className="text-primary underline hover:text-primary/80"
+            >
+              Créer un compte
+            </button>
+          </p>
         </CardContent>
       </Card>
     </div>
