@@ -72,7 +72,7 @@ export function TaskBoard({ tasks, members, currentProfileId }: TaskBoardProps) 
   }) => {
     try {
       await createTask(data)
-      toast.success('Tâche crée')
+      toast.success('Tâche créée')
     } catch (e: any) {
       toast.error(e.message || 'Erreur lors de la création')
     }
@@ -114,10 +114,10 @@ export function TaskBoard({ tasks, members, currentProfileId }: TaskBoardProps) 
             placeholder="Rechercher..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-48"
+            className="w-full sm:w-48"
           />
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-36">
+            <SelectTrigger className="w-full sm:w-36">
               <SelectValue placeholder="Statut" />
             </SelectTrigger>
             <SelectContent>
@@ -130,7 +130,7 @@ export function TaskBoard({ tasks, members, currentProfileId }: TaskBoardProps) 
             </SelectContent>
           </Select>
           <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-36">
+            <SelectTrigger className="w-full sm:w-36">
               <SelectValue placeholder="Priorité" />
             </SelectTrigger>
             <SelectContent>
@@ -143,7 +143,7 @@ export function TaskBoard({ tasks, members, currentProfileId }: TaskBoardProps) 
             </SelectContent>
           </Select>
           <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="Assigné à" />
             </SelectTrigger>
             <SelectContent>
@@ -157,12 +157,12 @@ export function TaskBoard({ tasks, members, currentProfileId }: TaskBoardProps) 
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
+        <Button onClick={() => setCreateOpen(true)} className="w-full sm:w-auto">
           <Plus size={16} className="mr-1" /> Nouvelle tâche
         </Button>
       </div>
 
-      <div className="border rounded-lg bg-white">
+      <div className="border rounded-lg bg-white overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
