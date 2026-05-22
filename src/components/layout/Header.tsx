@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LogOut, Users, ListChecks } from 'lucide-react'
+import { LogOut, Users, ListChecks, CalendarDays, User } from 'lucide-react'
 
 export function Header() {
   const { user, signOut } = useAuth()
@@ -40,6 +40,14 @@ export function Header() {
           >
             <Users size={16} /> Membres
           </Link>
+          <Link
+            href="/calendrier"
+            className={`text-sm font-medium flex items-center gap-1 ${
+              pathname === '/calendrier' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <CalendarDays size={16} /> Calendrier
+          </Link>
           <DropdownMenu>
             <DropdownMenuTrigger>
               <Button variant="ghost" size="sm" className="gap-2">
@@ -54,6 +62,11 @@ export function Header() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link href="/profil" className="cursor-pointer flex items-center gap-2">
+                  <User size={14} /> Profil
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={signOut}
                 className="text-red-600 cursor-pointer"
