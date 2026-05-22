@@ -7,8 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
@@ -17,6 +15,7 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          default_days: Json | null
           email: string
           full_name: string
           id: string
@@ -25,6 +24,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          default_days?: Json | null
           email: string
           full_name: string
           id?: string
@@ -33,6 +33,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          default_days?: Json | null
           email?: string
           full_name?: string
           id?: string
@@ -95,6 +96,68 @@ export type Database = {
           },
         ]
       }
+      calendar_entries: {
+        Row: {
+          id: string
+          profile_id: string
+          date: string
+          presence: Database["public"]["Enums"]["presence_type"]
+          note: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          profile_id: string
+          date: string
+          presence?: Database["public"]["Enums"]["presence_type"]
+          note?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          profile_id?: string
+          date?: string
+          presence?: Database["public"]["Enums"]["presence_type"]
+          note?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_entries_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      team_holidays: {
+        Row: {
+          id: string
+          name: string
+          date: string
+          is_recurring: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          date: string
+          is_recurring?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          date?: string
+          is_recurring?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -105,6 +168,7 @@ export type Database = {
     Enums: {
       task_priority: "high" | "medium" | "low"
       task_status: "todo" | "in_progress" | "done" | "cancelled"
+      presence_type: "office" | "remote" | "leave" | "holiday"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -234,11 +298,15 @@ export const Constants = {
     Enums: {
       task_priority: ["high", "medium", "low"],
       task_status: ["todo", "in_progress", "done", "cancelled"],
+      presence_type: ["office", "remote", "leave", "holiday"],
     },
   },
 } as const
 
 export type TaskStatus = Database["public"]["Enums"]["task_status"]
 export type TaskPriority = Database["public"]["Enums"]["task_priority"]
+export type PresenceType = Database["public"]["Enums"]["presence_type"]
 export type Task = Database["public"]["Tables"]["tasks"]["Row"]
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"]
+export type CalendarEntry = Database["public"]["Tables"]["calendar_entries"]["Row"]
+export type TeamHoliday = Database["public"]["Tables"]["team_holidays"]["Row"]
