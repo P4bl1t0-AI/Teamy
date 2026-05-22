@@ -21,7 +21,7 @@ import {
 import { StatusBadge } from './StatusBadge'
 import { PriorityBadge } from './PriorityBadge'
 import { TASK_STATUS_LABELS, TASK_PRIORITY_LABELS } from '@/lib/constants'
-import type { Task, TaskStatus, TaskPriority, Profile } from '@/types/database'
+import type { Task, TaskStatus, TaskPriority, Profile } from '@/types'
 import { Pencil, Trash2, Plus } from 'lucide-react'
 import { TaskForm } from './TaskForm'
 import { createTask, updateTask, deleteTask } from '@/app/actions'

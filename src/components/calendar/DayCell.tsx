@@ -1,50 +1,75 @@
 'use client'
 
-import { useState } from 'react'
-import { EditDayDialog } from './EditDayDialog'
-import type { PresenceType } from '@/types/database'
+import { PRESENCE_COLORS } from '@/lib/constants'
+import type { PresenceType, Profile, CalendarEntry, TeamHoliday } from '@/types'
 
 interface DayCellProps {
-  profileId: string
-  date: string
-  presence: PresenceType | null
-  holidayName?: string
-  note?: string | null
-  onUpdate: () => void
+  date: Date
+  entries: CalendarEntry[]
+  profiles: Profile[]
+  holiday?: TeamHoliday
+  isCurrentMonth: boolean
+  isToday: boolean
+  onClick: () => void
 }
 
-export function DayCell({ profileId, date, presence, holidayName, note, onUpdate }: DayCellProps) {
-  const [open, setOpen] = useState(false)
+function getPresenceForProfile(
+  profile: Profile,
+  dateStr: string,
+  entries: CalendarEntry[]
+): PresenceType | null {
+  const entry = entries.find((e) => e.profile_id === profile.id && e.date === dateStr)
+  if (entry) return entry.presence
 
-  const presenceStyles: Record<string, string> = {
-    office: 'bg-blue-100 border-blue-200',
-    remote: 'bg-violet-100 border-violet-200',
-    leave: 'bg-emerald-100 border-emerald-200',
-    holiday: 'bg-red-100 border-red-200',
+  // Fallback sur default_days
+  const dayKey = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][
+    new Date(dateStr).getDay()
+  ] as string
+
+  const defaults = profile.default_days as Record<string, string> | null
+  if (defaults && defaults[dayKey]) {
+    return defaults[dayKey] as PresenceType
   }
+  return null
+}
+
+export function DayCell({ date, entries, profiles, holiday, isCurrentMonth, isToday, onClick }: DayCellProps) {
+  const dateStr = date.toISOString().split('T')[0]
 
   return (
-    <>
-      <td
-        className={`text-center border px-0.5 py-1 cursor-pointer transition-colors hover:opacity-80 ${
-          presence ? presenceStyles[presence] : 'bg-slate-50 border-slate-200'
-        }`}
-        onClick={() => setOpen(true)}
-        title={holidayName || note || undefined}
-      >
-        <div className="w-full h-4" />
-      </td>
-      {open && (
-        <EditDayDialog
-          open={open}
-          onClose={() => setOpen(false)}
-          profileId={profileId}
-          date={date}
-          currentPresence={presence}
-          holidayName={holidayName}
-          onUpdate={onUpdate}
-        />
+    <div
+      onClick={onClick}
+      className={`
+        relative border rounded-lg p-2 min-h-[120px] cursor-pointer transition-colors hover:bg-accent/50
+        ${isCurrentMonth ? 'bg-white' : 'bg-gray-50/50'}
+        ${isToday ? 'ring-2 ring-primary ring-offset-1' : ''}
+      `}
+    >
+      {holiday && (
+        <div className="absolute top-0 left-0 right-0 bg-rose-100 text-rose-800 text-[10px] font-medium px-2 py-0.5 rounded-t-lg truncate">
+          {holiday.name}
+        </div>
       )}
-    </>
+      <div className={`text-sm font-semibold mb-1 ${!isCurrentMonth ? 'text-gray-300' : 'text-foreground'}`}>
+        {date.getDate()}
+      </div>
+      <div className="flex flex-wrap gap-1 mt-1">
+        {profiles.map((profile) => {
+          const presence = getPresenceForProfile(profile, dateStr, entries)
+          if (!presence) return null
+          const colorClass = PRESENCE_COLORS[presence] ?? 'bg-gray-100 text-gray-600'
+          const bgClass = colorClass.split(' ')[0]
+          return (
+            <div
+              key={profile.id}
+              title={`${profile.full_name} — ${presence}`}
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${bgClass.replace('bg-', 'bg-').replace('100', '500')}`}
+            >
+              {profile.full_name.charAt(0).toUpperCase()}
+            </div>
+          )
+        })}
+      </div>
+    </div>
   )
 }

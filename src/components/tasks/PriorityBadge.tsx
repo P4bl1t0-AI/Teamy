@@ -2,7 +2,7 @@
 
 import { Badge } from '@/components/ui/badge'
 import { TASK_PRIORITY_LABELS } from '@/lib/constants'
-import type { TaskPriority } from '@/types/database'
+import type { TaskPriority } from '@/types'
 
 const variants: Record<TaskPriority, string> = {
   high: 'bg-red-100 text-red-700 hover:bg-red-200',

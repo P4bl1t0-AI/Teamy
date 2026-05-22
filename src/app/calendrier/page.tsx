@@ -1,63 +1,30 @@
-'use client'
-
-import { useState, useCallback } from 'react'
 import { CalendarGrid } from '@/components/calendar/CalendarGrid'
-import { CalendarLegend } from '@/components/calendar/CalendarLegend'
-import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react'
+import { getCalendarEntries, getTeamHolidays, getProfiles } from '@/app/calendar-actions'
 
-export const dynamic = 'force-dynamic'
+export default async function CalendrierPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ year?: string; month?: string }>
+}) {
+  const params = await searchParams
+  const now = new Date()
+  const year = params.year ? parseInt(params.year) : now.getFullYear()
+  const month = params.month ? parseInt(params.month) : now.getMonth() + 1
 
-export default function CalendrierPage() {
-  const today = new Date()
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth())
-  const [currentYear, setCurrentYear] = useState(today.getFullYear())
-
-  const goToPrevMonth = useCallback(() => {
-    setCurrentMonth(prev => {
-      if (prev === 0) {
-        setCurrentYear(y => y - 1)
-        return 11
-      }
-      return prev - 1
-    })
-  }, [])
-
-  const goToNextMonth = useCallback(() => {
-    setCurrentMonth(prev => {
-      if (prev === 11) {
-        setCurrentYear(y => y + 1)
-        return 0
-      }
-      return prev + 1
-    })
-  }, [])
-
-  const monthNames = [
-    'Janvier','Février','Mars','Avril','Mai','Juin',
-    'Juillet','Août','Septembre','Octobre','Novembre','Décembre'
-  ]
+  const [entries, holidays, profiles] = await Promise.all([
+    getCalendarEntries(year, month),
+    getTeamHolidays(year),
+    getProfiles(),
+  ])
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <CalendarIcon size={24} /> Calendrier équipe
-        </h1>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={goToPrevMonth}>
-            <ChevronLeft size={16} />
-          </Button>
-          <span className="text-lg font-semibold min-w-[160px] text-center">
-            {monthNames[currentMonth]} {currentYear}
-          </span>
-          <Button variant="outline" size="sm" onClick={goToNextMonth}>
-            <ChevronRight size={16} />
-          </Button>
-        </div>
-      </div>
-      <CalendarLegend />
-      <CalendarGrid year={currentYear} month={currentMonth} />
-    </div>
+    <main className="container mx-auto px-4 py-6">
+      <h1 className="text-2xl font-bold mb-6">Calendrier</h1>
+      <CalendarGrid
+        initialEntries={entries}
+        initialHolidays={holidays}
+        profiles={profiles}
+      />
+    </main>
   )
 }

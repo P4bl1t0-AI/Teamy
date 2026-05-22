@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { STATUS_OPTIONS, PRIORITY_OPTIONS } from '@/lib/constants'
-import type { TaskStatus, TaskPriority } from '@/types/database'
+import type { TaskStatus, TaskPriority } from '@/types'
 
 interface TaskFormProps {
   open: boolean

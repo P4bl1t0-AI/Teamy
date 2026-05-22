@@ -2,7 +2,7 @@
 
 import { Badge } from '@/components/ui/badge'
 import { TASK_STATUS_LABELS } from '@/lib/constants'
-import type { TaskStatus } from '@/types/database'
+import type { TaskStatus } from '@/types'
 import { CheckCircle2, Clock, Loader2, XCircle } from 'lucide-react'
 
 const icons: Record<TaskStatus, React.ReactNode> = {

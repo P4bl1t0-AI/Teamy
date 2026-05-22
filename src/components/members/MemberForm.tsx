@@ -11,8 +11,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { Plus } from 'lucide-react'
+import { DAY_KEYS, PRESENCE_OPTIONS, DAY_LABELS } from '@/lib/constants'
+import type { DefaultDays } from '@/app/calendar-actions'
+
+const DAY_KEY_TO_LABEL: Record<string, string> = {
+  monday: 'Lundi',
+  tuesday: 'Mardi',
+  wednesday: 'Mercredi',
+  thursday: 'Jeudi',
+  friday: 'Vendredi',
+  saturday: 'Samedi',
+  sunday: 'Dimanche',
+}
 
 export function MemberForm({ onCreated }: { onCreated: () => void }) {
   const [open, setOpen] = useState(false)
@@ -21,6 +34,13 @@ export function MemberForm({ onCreated }: { onCreated: () => void }) {
   const [roleLabel, setRoleLabel] = useState('')
   const [loading, setLoading] = useState(false)
   const [createdPassword, setCreatedPassword] = useState<string | null>(null)
+  const [defaultDays, setDefaultDays] = useState<DefaultDays>({
+    monday: 'office',
+    tuesday: 'office',
+    wednesday: 'office',
+    thursday: 'office',
+    friday: 'office',
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,6 +54,7 @@ export function MemberForm({ onCreated }: { onCreated: () => void }) {
         email,
         role_label: roleLabel || undefined,
         password,
+        default_days: defaultDays,
       }),
     })
     setLoading(false)
@@ -53,6 +74,13 @@ export function MemberForm({ onCreated }: { onCreated: () => void }) {
     setFullName('')
     setEmail('')
     setRoleLabel('')
+    setDefaultDays({
+      monday: 'office',
+      tuesday: 'office',
+      wednesday: 'office',
+      thursday: 'office',
+      friday: 'office',
+    })
   }
 
   return (
@@ -62,7 +90,7 @@ export function MemberForm({ onCreated }: { onCreated: () => void }) {
           <Plus size={16} className="mr-1" /> Ajouter un membre
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {createdPassword ? 'Membre créé !' : 'Ajouter un membre'}
@@ -127,6 +155,35 @@ export function MemberForm({ onCreated }: { onCreated: () => void }) {
                 placeholder="Ex: Développeur, Chef de projet..."
               />
             </div>
+
+            <div className="space-y-2">
+              <Label>Jours par défaut (Lundi–Vendredi)</Label>
+              <div className="grid grid-cols-1 gap-2">
+                {DAY_KEYS.slice(0, 5).map((key) => (
+                  <div key={key} className="flex items-center gap-3">
+                    <span className="text-sm w-24 shrink-0">{DAY_KEY_TO_LABEL[key]}</span>
+                    <Select
+                      value={defaultDays[key] ?? ''}
+                      onValueChange={(val) =>
+                        setDefaultDays((prev) => ({ ...prev, [key]: val as DefaultDays[keyof DefaultDays] }))
+                      }
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Non défini" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PRESENCE_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <p className="text-xs text-muted-foreground">
               Un mot de passe temporaire sera généré. Le membre pourra le
               réinitialiser.

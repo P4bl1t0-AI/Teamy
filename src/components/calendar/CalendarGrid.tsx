@@ -1,128 +1,146 @@
 'use client'
 
-import { useEffect, useState, useMemo, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState, useMemo } from 'react'
+import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { CalendarLegend } from './CalendarLegend'
 import { DayCell } from './DayCell'
-import type { Profile, CalendarEntry, TeamHoliday } from '@/types/database'
+import { DayEditModal } from './DayEditModal'
+import { CompanyHolidayForm } from './CompanyHolidayForm'
+import type { Profile, CalendarEntry, TeamHoliday, PresenceType } from '@/types'
+import { DAY_LABELS } from '@/lib/constants'
 
 interface CalendarGridProps {
-  year: number
-  month: number
+  initialEntries: CalendarEntry[]
+  initialHolidays: TeamHoliday[]
+  profiles: Profile[]
 }
 
-export function CalendarGrid({ year, month }: CalendarGridProps) {
-  const supabase = createClient()
-  const [members, setMembers] = useState<Profile[]>([])
-  const [entries, setEntries] = useState<CalendarEntry[]>([])
-  const [holidays, setHolidays] = useState<TeamHoliday[]>([])
-  const [loading, setLoading] = useState(true)
+export function CalendarGrid({ initialEntries, initialHolidays, profiles }: CalendarGridProps) {
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [showHolidayForm, setShowHolidayForm] = useState(false)
 
-  const daysInMonth = useMemo(() => new Date(year, month + 1, 0).getDate(), [year, month])
+  const year = currentDate.getFullYear()
+  const month = currentDate.getMonth() + 1
 
-  const formattedToday = useMemo(() => {
-    const t = new Date()
-    return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`
-  }, [])
+  const monthLabel = currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
 
-  const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`
-  const endDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`
+  const days = useMemo(() => {
+    const firstDayOfMonth = new Date(year, month - 1, 1)
+    const lastDayOfMonth = new Date(year, month, 0)
+    const startDay = firstDayOfMonth.getDay() === 0 ? 6 : firstDayOfMonth.getDay() - 1 // Lundi = 0
+    const daysInMonth = lastDayOfMonth.getDate()
 
-  const fetchData = useCallback(async () => {
-    setLoading(true)
-    const [membersRes, entriesRes, holidaysRes] = await Promise.all([
-      supabase.from('profiles').select('*').order('full_name'),
-      supabase.from('calendar_entries').select('*').gte('date', startDate).lte('date', endDate),
-      supabase.from('team_holidays').select('*'),
-    ])
-    if (membersRes.data) setMembers(membersRes.data)
-    if (entriesRes.data) setEntries(entriesRes.data)
-    if (holidaysRes.data) setHolidays(holidaysRes.data)
-    setLoading(false)
-  }, [supabase, startDate, endDate])
+    const result: Date[] = []
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    // Jours du mois précédent pour compléter la première semaine
+    const prevMonthLastDay = new Date(year, month - 1, 0).getDate()
+    for (let i = startDay - 1; i >= 0; i--) {
+      result.push(new Date(year, month - 2, prevMonthLastDay - i))
+    }
 
-  const getEntry = useCallback((profileId: string, day: number) => {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    return entries.find(e => e.profile_id === profileId && e.date === dateStr)
-  }, [entries, year, month])
+    // Jours du mois courant
+    for (let i = 1; i <= daysInMonth; i++) {
+      result.push(new Date(year, month - 1, i))
+    }
 
-  const getHoliday = useCallback((day: number) => {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    return holidays.find(h => {
-      if (h.is_recurring) {
-        return h.date.slice(5) === dateStr.slice(5)
-      }
-      return h.date === dateStr
-    })
-  }, [holidays, year, month])
+    // Jours du mois suivant pour compléter la dernière semaine
+    const remaining = (7 - (result.length % 7)) % 7
+    for (let i = 1; i <= remaining; i++) {
+      result.push(new Date(year, month, i))
+    }
 
-  const getDefaultPresence = useCallback((profile: Profile, day: number) => {
-    const date = new Date(year, month, day)
-    const weekday = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
-    const defaults = (profile.default_days as Record<string, string>) || {}
-    const val = defaults[weekday]
-    if (val === 'office' || val === 'remote') return val
-    return null
+    return result
   }, [year, month])
 
-  if (loading) return <p className="text-muted-foreground">Chargement du calendrier...</p>
+  const todayStr = new Date().toISOString().split('T')[0]
+
+  const holidaysMap = useMemo(() => {
+    const map = new Map<string, TeamHoliday>()
+    initialHolidays.forEach((h) => {
+      map.set(h.date, h)
+    })
+    return map
+  }, [initialHolidays])
+
+  const entriesMap = useMemo(() => {
+    const map = new Map<string, CalendarEntry[]>()
+    initialEntries.forEach((e) => {
+      const list = map.get(e.date) ?? []
+      list.push(e)
+      map.set(e.date, list)
+    })
+    return map
+  }, [initialEntries])
+
+  const goToPrevMonth = () => setCurrentDate(new Date(year, month - 2, 1))
+  const goToNextMonth = () => setCurrentDate(new Date(year, month, 1))
+  const goToToday = () => setCurrentDate(new Date())
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse min-w-[800px]">
-        <thead>
-          <tr>
-            <th className="sticky left-0 bg-white z-10 text-left px-2 py-2 text-sm font-semibold border-b">
-              Membre
-            </th>
-            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
-              const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-              const isToday = dateStr === formattedToday
-              const date = new Date(year, month, day)
-              const isWeekend = date.getDay() === 0 || date.getDay() === 6
-              return (
-                <th
-                  key={day}
-                  className={`text-center py-1 text-xs w-8 border-b ${
-                    isToday ? 'bg-blue-50 border-blue-300' : isWeekend ? 'bg-slate-50' : ''
-                  }`}
-                >
-                  {day}
-                </th>
-              )
-            })}
-          </tr>
-        </thead>
-        <tbody>
-          {members.map(member => (
-            <tr key={member.id} className="hover:bg-slate-50/50">
-              <td className="sticky left-0 bg-white z-10 px-2 py-1 text-sm font-medium border-b whitespace-nowrap">
-                {member.full_name}
-              </td>
-              {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
-                const entry = getEntry(member.id, day)
-                const holiday = getHoliday(day)
-                const defaultPresence = getDefaultPresence(member, day)
-                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-                return (
-                  <DayCell
-                    key={day}
-                    profileId={member.id}
-                    date={dateStr}
-                    presence={entry?.presence || (holiday ? 'holiday' : defaultPresence || null)}
-                    holidayName={holiday?.name}
-                    note={entry?.note}
-                    onUpdate={fetchData}
-                  />
-                )
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-bold capitalize min-w-[180px]">{monthLabel}</h2>
+          <Button variant="outline" size="icon" onClick={goToPrevMonth}>
+            <ChevronLeft size={16} />
+          </Button>
+          <Button variant="outline" size="icon" onClick={goToNextMonth}>
+            <ChevronRight size={16} />
+          </Button>
+          <Button variant="outline" size="sm" onClick={goToToday}>
+            Aujourd'hui
+          </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          <CalendarLegend />
+          <Button variant="secondary" size="sm" onClick={() => setShowHolidayForm(true)}>
+            <CalendarDays size={14} className="mr-1" /> Jours fériés
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {DAY_LABELS.map((label) => (
+          <div key={label} className="text-center text-xs font-medium text-muted-foreground py-1">
+            {label}
+          </div>
+        ))}
+        {days.map((date) => {
+          const dateStr = date.toISOString().split('T')[0]
+          const isCurrentMonth = date.getMonth() === month - 1
+          const isToday = dateStr === todayStr
+          return (
+            <DayCell
+              key={dateStr}
+              date={date}
+              entries={entriesMap.get(dateStr) ?? []}
+              profiles={profiles}
+              holiday={holidaysMap.get(dateStr)}
+              isCurrentMonth={isCurrentMonth}
+              isToday={isToday}
+              onClick={() => setSelectedDate(date)}
+            />
+          )
+        })}
+      </div>
+
+      {selectedDate && (
+        <DayEditModal
+          date={selectedDate}
+          profiles={profiles}
+          entries={entriesMap.get(selectedDate.toISOString().split('T')[0]) ?? []}
+          onClose={() => setSelectedDate(null)}
+        />
+      )}
+
+      {showHolidayForm && (
+        <CompanyHolidayForm
+          holidays={initialHolidays}
+          onClose={() => setShowHolidayForm(false)}
+        />
+      )}
     </div>
   )
 }

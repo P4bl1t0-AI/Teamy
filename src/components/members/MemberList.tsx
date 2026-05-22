@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
-import type { Profile } from '@/types/database'
+import type { Profile } from '@/types'
 import { Mail, UserCircle } from 'lucide-react'
 
 export function MemberList({ refreshKey }: { refreshKey: number }) {

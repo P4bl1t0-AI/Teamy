@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
-import type { TaskStatus, TaskPriority } from "@/types/database"
+import type { TaskStatus, TaskPriority } from "@/types"
 
 export async function createTask(data: {
   title: string
