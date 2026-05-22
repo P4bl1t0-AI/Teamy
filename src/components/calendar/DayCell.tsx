@@ -2,14 +2,12 @@
 
 import { useState } from 'react'
 import { EditDayDialog } from './EditDayDialog'
-import type { Enums } from '@/types/database'
-
-type PresenceType = Enums['presence_type'] | null
+import type { PresenceType } from '@/types/database'
 
 interface DayCellProps {
   profileId: string
   date: string
-  presence: PresenceType
+  presence: PresenceType | null
   holidayName?: string
   note?: string | null
   onUpdate: () => void

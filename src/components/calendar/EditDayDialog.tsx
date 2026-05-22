@@ -10,23 +10,21 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { Building2, Home, Umbrella, RotateCcw } from 'lucide-react'
-import type { Enums } from '@/types/database'
-
-type PresenceType = Enums['presence_type'] | null
+import type { PresenceType } from '@/types/database'
 
 interface EditDayDialogProps {
   open: boolean
   onClose: () => void
   profileId: string
   date: string
-  currentPresence: PresenceType
+  currentPresence: PresenceType | null
   holidayName?: string
   onUpdate: () => void
 }
 
 export function EditDayDialog({ open, onClose, profileId, date, currentPresence, holidayName, onUpdate }: EditDayDialogProps) {
   const supabase = createClient()
-  const [presence, setPresence] = useState<PresenceType>(currentPresence)
+  const [presence, setPresence] = useState<PresenceType | null>(currentPresence)
   const [note, setNote] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -71,7 +69,7 @@ export function EditDayDialog({ open, onClose, profileId, date, currentPresence,
     }
   }
 
-  const options: { value: NonNullable<PresenceType>; label: string; icon: typeof Home }[] = [
+  const options: { value: PresenceType; label: string; icon: typeof Home }[] = [
     { value: 'office', label: 'Sur site', icon: Building2 },
     { value: 'remote', label: 'Télétravail', icon: Home },
     { value: 'leave', label: 'Congés', icon: Umbrella },

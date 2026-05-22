@@ -62,10 +62,11 @@ export function Header() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href="/profil" className="cursor-pointer flex items-center gap-2">
-                  <User size={14} /> Profil
-                </Link>
+              <DropdownMenuItem
+                className="cursor-pointer flex items-center gap-2"
+                onClick={() => window.location.href = '/profil'}
+              >
+                <User size={14} /> Profil
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={signOut}

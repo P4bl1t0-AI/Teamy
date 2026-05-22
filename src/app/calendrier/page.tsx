@@ -6,6 +6,8 @@ import { CalendarLegend } from '@/components/calendar/CalendarLegend'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default function CalendrierPage() {
   const today = new Date()
   const [currentMonth, setCurrentMonth] = useState(today.getMonth())
