@@ -68,18 +68,31 @@ export async function deleteCalendarEntry(id: string) {
 
 export async function getTeamHolidays(year: number) {
   const supabase = await createClient()
-  const startDate = `${year}-01-01`
-  const endDate = `${year}-12-31`
 
-  const { data, error } = await supabase
+  // 1. Fériés non-récurrents de l'année demandée
+  const { data: fixedHolidays, error: err1 } = await supabase
     .from("team_holidays")
     .select("*")
-    .gte("date", startDate)
-    .lte("date", endDate)
+    .gte("date", `${year}-01-01`)
+    .lte("date", `${year}-12-31`)
+    .eq("is_recurring", false)
     .order("date", { ascending: true })
+  if (err1) throw new Error(err1.message)
 
-  if (error) throw new Error(error.message)
-  return data ?? []
+  // 2. Fériés récurrents (toutes années confondues) → on remappe l'année
+  const { data: recurringHolidays, error: err2 } = await supabase
+    .from("team_holidays")
+    .select("*")
+    .eq("is_recurring", true)
+    .order("date", { ascending: true })
+  if (err2) throw new Error(err2.message)
+
+  const mappedRecurring = (recurringHolidays ?? []).map((h) => {
+    const [, month, day] = h.date.split("-")
+    return { ...h, date: `${year}-${month}-${day}` }
+  })
+
+  return [...(fixedHolidays ?? []), ...mappedRecurring]
 }
 
 export async function addTeamHoliday(date: string, name: string, isRecurring = false) {

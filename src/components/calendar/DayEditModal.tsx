@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { PRESENCE_OPTIONS, PRESENCE_LABELS } from '@/lib/constants'
+import { PRESENCE_OPTIONS } from '@/lib/constants'
+import { Check } from 'lucide-react'
 import type { Profile, CalendarEntry, PresenceType } from '@/types'
 import { setDayStatus, deleteCalendarEntry } from '@/app/calendar-actions'
 
@@ -22,6 +23,7 @@ export function DayEditModal({ date, profiles, entries, onClose }: DayEditModalP
   const label = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
 
   const [loading, setLoading] = useState<string | null>(null)
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
 
   const getEntry = (profileId: string) => entries.find((e) => e.profile_id === profileId)
 
@@ -29,7 +31,7 @@ export function DayEditModal({ date, profiles, entries, onClose }: DayEditModalP
     setLoading(profileId)
     try {
       await setDayStatus(profileId, dateStr, presence, note)
-      onClose()
+      setSavedIds((prev) => new Set(prev).add(profileId))
     } catch (e) {
       alert((e as Error).message)
     } finally {
@@ -42,7 +44,7 @@ export function DayEditModal({ date, profiles, entries, onClose }: DayEditModalP
     setLoading(profileId)
     try {
       await deleteCalendarEntry(entryId)
-      onClose()
+      setSavedIds((prev) => new Set(prev).add(profileId))
     } catch (e) {
       alert((e as Error).message)
     } finally {
@@ -60,13 +62,21 @@ export function DayEditModal({ date, profiles, entries, onClose }: DayEditModalP
           {profiles.map((profile) => {
             const entry = getEntry(profile.id)
             const currentValue = entry?.presence ?? ''
+            const isSaved = savedIds.has(profile.id)
             return (
               <div key={profile.id} className="flex items-start gap-3 p-3 rounded-lg border bg-card">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold shrink-0">
                   {profile.full_name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 space-y-2">
-                  <div className="font-medium text-sm">{profile.full_name}</div>
+                  <div className="font-medium text-sm flex items-center gap-2">
+                    {profile.full_name}
+                    {isSaved && (
+                      <span className="text-[10px] text-emerald-600 flex items-center gap-0.5">
+                        <Check size={12} /> Sauvegardé
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2">
                     <Select
                       value={currentValue}
@@ -112,6 +122,9 @@ export function DayEditModal({ date, profiles, entries, onClose }: DayEditModalP
               </div>
             )
           })}
+        </div>
+        <div className="mt-4 flex justify-end">
+          <Button onClick={onClose}>Fermer</Button>
         </div>
       </DialogContent>
     </Dialog>
