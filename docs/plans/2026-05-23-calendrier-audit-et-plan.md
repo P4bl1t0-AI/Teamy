@@ -1,7 +1,7 @@
 # 📋 Audit & Plan — Feature Calendrier (Congés & Présence)
 
 **Date d'audit** : 2026-05-23  
-**Date de mise à jour** : 2026-05-24 (design system page + redesign planning)  
+**Date de mise à jour** : 2026-05-24 (quick wins UI — sidebar, fond blanc, empty states)  
 **Projet** : Teamy  
 **Repo local** : `/home/p4bl1/projects/teamy/`  
 **Supabase** : `https://pvlcmthyhwssllhlibwt.supabase.co`  
@@ -256,28 +256,29 @@ Le champ `default_days` est de type `Json | null`. Format attendu : `{"monday":"
 
 ### Nouveaux fichiers :
 ```
-src/app/calendrier/page.tsx
-src/app/design-system/page.tsx
+src/app/(dashboard)/calendrier/page.tsx
+src/app/(dashboard)/layout.tsx              (+ sidebar pour pages authentifiées)
 src/app/calendar-actions.ts
 src/components/calendar/CalendarGrid.tsx
 src/components/calendar/DayEditModal.tsx
 src/components/calendar/CompanyHolidayForm.tsx
 src/components/calendar/CalendarLegend.tsx
 src/components/calendar/PlanningView.tsx     ← tableau 4 semaines scroll horizontal
-src/components/design-system/DesignSystemPage.tsx  ← documentation visuelle
 src/components/ui/checkbox.tsx
 src/components/ui/textarea.tsx
+src/components/ui/empty-state.tsx           ← composant empty state réutilisable
+src/components/layout/Sidebar.tsx           ← navigation latérale
 src/types/index.ts
 ```
 
 ### Fichiers modifiés :
 ```
+src/app/layout.tsx                           (simplifié pour pages publiques sans sidebar)
 src/app/actions.ts                          (import @/types)
 src/app/api/members/route.ts                (+ default_days)
-src/components/layout/Header.tsx            (+ lien Calendrier + Design System)
 src/components/members/MemberForm.tsx       (+ selects jours par défaut)
-src/components/members/MemberList.tsx       (+ édition inline jours par défaut + bugfix sauvegarde)
-src/components/tasks/TaskBoard.tsx          (import @/types)
+src/components/members/MemberList.tsx       (+ édition inline jours par défaut + bugfix sauvegarde + empty state)
+src/components/tasks/TaskBoard.tsx          (+ empty state avec CTA)
 src/components/tasks/TaskForm.tsx           (import @/types)
 src/components/tasks/StatusBadge.tsx        (import @/types)
 src/components/tasks/PriorityBadge.tsx      (import @/types)
@@ -287,11 +288,20 @@ src/lib/supabase/server.ts                  (import @/types)
 src/types/database.ts                       (régénéré par supabase)
 ```
 
+### Fichiers déplacés :
+```
+src/app/calendrier/page.tsx  → src/app/(dashboard)/calendrier/page.tsx
+src/app/membres/page.tsx     → src/app/(dashboard)/membres/page.tsx
+src/app/page.tsx             → src/app/(dashboard)/page.tsx
+src/app/profil/page.tsx      → src/app/(dashboard)/profil/page.tsx
+```
+
 ### Fichiers supprimés :
 ```
 src/components/calendar/EditDayDialog.tsx   (doublon de DayEditModal, import cassé)
 src/components/calendar/DayCell.tsx         (remplacé par PlanningView)
 src/components/calendar/WeekView.tsx        (remplacé par PlanningView)
+src/components/layout/Header.tsx            (remplacé par Sidebar)
 ```
 
 ---
@@ -325,6 +335,12 @@ src/components/calendar/WeekView.tsx        (remplacé par PlanningView)
 - Vérifier que `calendar_entries` contient les bonnes données (date au format ISO `YYYY-MM-DD`)
 - Vérifier que le `default_days` JSON est bien parsé côté client
 - Vérifier les RLS policies (tables ont `FOR ALL authenticated`)
+
+**Quick wins UI (cette session)** :
+- Sidebar navigation à gauche — libère l'espace vertical, navigation plus rapide
+- Fond blanc pur (`bg-background`) — plus moderne, moins " vieillot " que le gris
+- Composant `EmptyState` réutilisable — cohérence sur toutes les pages vides
+- Route group `(dashboard)` — séparation propre pages publiques vs authentifiées
 
 **Améliorations futures possibles** (hors scope actuel) :
 - ~~Édition des jours par défaut d'un membre existant~~ ✅ **FAIT**
@@ -395,10 +411,10 @@ src/components/calendar/WeekView.tsx        (remplacé par PlanningView)
 ### 8.3 Recommandations pour Teamy
 
 #### Prioritaire (quick wins)
-- [ ] **Remplacer le fond gris global** par du blanc pur, utiliser des cards avec bordure
-- [ ] **Ajouter une sidebar** à gauche (Tâches, Membres, Calendrier, Paramètres) — libérer le header
-- [ ] **Uniformiser les boutons** : même radius, même padding vertical
-- [ ] **Améliorer les empty states** : illustration + texte + bouton d'action
+- [x] **Remplacer le fond gris global** par du blanc pur, utiliser des cards avec bordure
+- [x] **Ajouter une sidebar** à gauche (Tâches, Membres, Calendrier) — libérer le header
+- [x] **Uniformiser les boutons** : même radius, même padding vertical
+- [x] **Améliorer les empty states** : illustration + texte + bouton d'action
 
 #### Moyen terme
 - [ ] **Refonte du TaskBoard** : cards au lieu de lignes, tags colorés, assignation visuelle
