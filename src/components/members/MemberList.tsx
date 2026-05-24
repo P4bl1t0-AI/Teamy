@@ -26,6 +26,7 @@ export function MemberList({ refreshKey }: { refreshKey: number }) {
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [savingId, setSavingId] = useState<string | null>(null)
+  const [editDefaults, setEditDefaults] = useState<Record<string, string>>({})
   const supabase = createClient()
 
   useEffect(() => {
@@ -40,16 +41,20 @@ export function MemberList({ refreshKey }: { refreshKey: number }) {
       })
   }, [refreshKey])
 
+  const startEditing = (profile: Profile) => {
+    const defaults = (profile.default_days as Record<string, string> | null) ?? {}
+    const initial: Record<string, string> = {}
+    DAY_KEYS.slice(0, 5).forEach((key) => {
+      initial[key] = defaults[key] || 'office'
+    })
+    setEditDefaults(initial)
+    setEditingId(profile.id)
+  }
+
   const handleSave = async (profile: Profile) => {
     setSavingId(profile.id)
     try {
-      const form = document.getElementById(`defaults-form-${profile.id}`) as HTMLFormElement
-      const formData = new FormData(form)
-      const defaults: Record<string, string> = {}
-      DAY_KEYS.slice(0, 5).forEach((key) => {
-        defaults[key] = (formData.get(key) as string) || 'office'
-      })
-      await updateProfileDefaults(profile.id, defaults)
+      await updateProfileDefaults(profile.id, editDefaults)
       toast.success('Jours par défaut mis à jour')
       setEditingId(null)
       // Refresh
@@ -99,7 +104,7 @@ export function MemberList({ refreshKey }: { refreshKey: number }) {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => setEditingId(isEditing ? null : m.id)}
+                onClick={() => isEditing ? setEditingId(null) : startEditing(m)}
               >
                 {isEditing ? <X size={14} /> : <Pencil size={14} />}
               </Button>
@@ -121,11 +126,14 @@ export function MemberList({ refreshKey }: { refreshKey: number }) {
             <Separator className="mx-4 w-auto" />
             <CardContent className="pt-3">
               {isEditing ? (
-                <form id={`defaults-form-${m.id}`} className="space-y-2" onSubmit={(e) => { e.preventDefault(); handleSave(m) }}>
+                <div className="space-y-2">
                   {DAY_KEYS.slice(0, 5).map((key) => (
                     <div key={key} className="flex items-center gap-2">
                       <span className="text-xs w-16">{DAY_KEY_TO_LABEL[key]}</span>
-                      <Select name={key} defaultValue={defaults[key] || 'office'}>
+                      <Select
+                        value={editDefaults[key] || 'office'}
+                        onValueChange={(val) => setEditDefaults((prev) => ({ ...prev, [key]: val ?? 'office' }))}
+                      >
                         <SelectTrigger className="h-7 text-xs w-full">
                           <SelectValue />
                         </SelectTrigger>
@@ -139,11 +147,16 @@ export function MemberList({ refreshKey }: { refreshKey: number }) {
                       </Select>
                     </div>
                   ))}
-                  <Button size="sm" className="w-full mt-2" disabled={savingId === m.id}>
+                  <Button
+                    size="sm"
+                    className="w-full mt-2"
+                    disabled={savingId === m.id}
+                    onClick={() => handleSave(m)}
+                  >
                     <Check size={14} className="mr-1" />
                     {savingId === m.id ? 'Sauvegarde...' : 'Sauvegarder'}
                   </Button>
-                </form>
+                </div>
               ) : (
                 <div className="space-y-1">
                   {DAY_KEYS.slice(0, 5).map((key) => {
