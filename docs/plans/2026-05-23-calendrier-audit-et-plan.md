@@ -1,11 +1,11 @@
 # 📋 Audit & Plan — Feature Calendrier (Congés & Présence)
 
 **Date d'audit** : 2026-05-23  
-**Date de mise à jour** : 2026-05-24 (redesign planning — scroll horizontal 4 semaines)  
+**Date de mise à jour** : 2026-05-24 (design system page + redesign planning)  
 **Projet** : Teamy  
 **Repo local** : `/home/p4bl1/projects/teamy/`  
 **Supabase** : `https://pvlcmthyhwssllhlibwt.supabase.co`  
-**Branche** : `main` (commits `873d00c` → `ed045de`)  
+**Branche** : `main` (commits `873d00c` → `e31ec7b`)  
 **Déploiement** : ✅ https://teamy-beryl.vercel.app
 
 ---
@@ -28,8 +28,9 @@
 | `/login` | Connexion |
 | `/inscription` | Inscription |
 | `/membres` | Liste des membres + formulaire |
-- **`/calendrier`** | **Planning 4 semaines (scroll horizontal) ✅** |
+| **`/calendrier`** | **Planning 4 semaines (scroll horizontal) ✅** |
 | `/profil` | Profil (créé dans une autre session) |
+| **`/design-system`** | **Design System — tokens, composants, patterns ✅** |
 
 ### 1.3 Schéma DB (migration 001 + 002 appliquées sur remote)
 
@@ -67,6 +68,8 @@ Le champ `default_days` est de type `Json | null`. Format attendu : `{"monday":"
   - `CalendarLegend.tsx` — légende des couleurs
   - ~~`DayCell.tsx`~~ — supprimé (remplacé par PlanningView)
   - ~~`WeekView.tsx`~~ — supprimé (remplacé par PlanningView)
+- **Design System** :
+  - `DesignSystemPage.tsx` — **page complète de documentation visuelle (tokens, composants, patterns)**
 
 ### 1.6 Server Actions
 - `createTask`, `updateTask`, `deleteTask` (`src/app/actions.ts`)
@@ -144,7 +147,16 @@ Le champ `default_days` est de type `Json | null`. Format attendu : `{"monday":"
 - [x] Jours fériés récurrents : `getTeamHolidays` remappe les dates sur l'année demandée (MM-DD)
 - [x] **Sauvegarde jours par défaut (`MemberList`) : `FormData` ne capturait pas les valeurs du `<Select>` shadcn/ui → remplacé par state contrôlé (`useState` + `value`/`onValueChange`)**
 
-### 2.8 Design visuel — Spécifications
+### 2.9 Design System
+- [x] **Page `/design-system`** — documentation visuelle complète
+- [x] **Tokens couleurs** — primaires, neutres, sémantiques, présence (Teamy)
+- [x] **Typographie** — échelle de tailles, font stack, line heights
+- [x] **Spacing & Radius** — visualisation des échelles
+- [x] **Composants** — gallery complète (buttons, badges, cards, forms, avatars, dialog, table)
+- [x] **Alertes & Feedback** — succès, info, warning, erreur
+- [x] **Tokens CSS** — table de référence avec valeurs et usage
+- [x] **Dark mode toggle** — preview en temps réel
+- [x] **Lien dans Header** — accessible via dropdown utilisateur
 
 #### Couleurs des statuts :
 | Statut | Tailwind classes |
@@ -207,7 +219,12 @@ Le champ `default_days` est de type `Json | null`. Format attendu : `{"monday":"
 - [x] Navigation par semaine (← → Aujourd'hui)
 - [x] Clic sur jour ouvré = DayEditModal
 
-### Phase 8 : Tests & Build
+### Phase 9 : Design System
+- [x] `DesignSystemPage.tsx` créé avec documentation complète
+- [x] Route `/design-system` ajoutée
+- [x] Lien dans le dropdown utilisateur (Header)
+
+### Phase 10 : Tests & Build
 - [x] `npm run build` → 0 warning
 - [x] Commit & push
 - [x] Env vars Vercel vérifiés
@@ -240,12 +257,14 @@ Le champ `default_days` est de type `Json | null`. Format attendu : `{"monday":"
 ### Nouveaux fichiers :
 ```
 src/app/calendrier/page.tsx
+src/app/design-system/page.tsx
 src/app/calendar-actions.ts
 src/components/calendar/CalendarGrid.tsx
 src/components/calendar/DayEditModal.tsx
 src/components/calendar/CompanyHolidayForm.tsx
 src/components/calendar/CalendarLegend.tsx
 src/components/calendar/PlanningView.tsx     ← tableau 4 semaines scroll horizontal
+src/components/design-system/DesignSystemPage.tsx  ← documentation visuelle
 src/components/ui/checkbox.tsx
 src/components/ui/textarea.tsx
 src/types/index.ts
@@ -255,7 +274,7 @@ src/types/index.ts
 ```
 src/app/actions.ts                          (import @/types)
 src/app/api/members/route.ts                (+ default_days)
-src/components/layout/Header.tsx            (+ lien Calendrier)
+src/components/layout/Header.tsx            (+ lien Calendrier + Design System)
 src/components/members/MemberForm.tsx       (+ selects jours par défaut)
 src/components/members/MemberList.tsx       (+ édition inline jours par défaut + bugfix sauvegarde)
 src/components/tasks/TaskBoard.tsx          (import @/types)
