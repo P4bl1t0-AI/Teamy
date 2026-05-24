@@ -1,7 +1,7 @@
 # 📋 Audit & Plan — Feature Calendrier (Congés & Présence)
 
 **Date d'audit** : 2026-05-23  
-**Date de mise à jour** : 2026-05-24 (quick wins UI — sidebar, fond blanc, empty states)  
+**Date de mise à jour** : 2026-05-24 (quick wins UI + francisation complète)  
 **Projet** : Teamy  
 **Repo local** : `/home/p4bl1/projects/teamy/`  
 **Supabase** : `https://pvlcmthyhwssllhlibwt.supabase.co`  
@@ -341,6 +341,7 @@ src/components/layout/Header.tsx            (remplacé par Sidebar)
 - Fond blanc pur (`bg-background`) — plus moderne, moins " vieillot " que le gris
 - Composant `EmptyState` réutilisable — cohérence sur toutes les pages vides
 - Route group `(dashboard)` — séparation propre pages publiques vs authentifiées
+- **Francisation complète** : tous les textes UI passés en français (bouton "Fermer" dans les dialogs, etc.)
 
 **Améliorations futures possibles** (hors scope actuel) :
 - ~~Édition des jours par défaut d'un membre existant~~ ✅ **FAIT**
