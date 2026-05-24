@@ -22,7 +22,8 @@ import { StatusBadge } from './StatusBadge'
 import { PriorityBadge } from './PriorityBadge'
 import { TASK_STATUS_LABELS, TASK_PRIORITY_LABELS } from '@/lib/constants'
 import type { Task, TaskStatus, TaskPriority, Profile } from '@/types'
-import { Pencil, Trash2, Plus } from 'lucide-react'
+import { Pencil, Trash2, Plus, ListChecks } from 'lucide-react'
+import { EmptyState } from '@/components/ui/empty-state'
 import { TaskForm } from './TaskForm'
 import { createTask, updateTask, deleteTask } from '@/app/actions'
 import { toast } from 'sonner'
@@ -177,8 +178,16 @@ export function TaskBoard({ tasks, members, currentProfileId }: TaskBoardProps) 
           <TableBody>
             {filteredTasks.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                  Aucune tâche trouvée.
+                <TableCell colSpan={6} className="py-8">
+                  <EmptyState
+                    icon={ListChecks}
+                    title="Aucune tâche"
+                    description="Créez votre première tâche pour commencer."
+                    action={{
+                      label: 'Nouvelle tâche',
+                      onClick: () => setEditTask({} as Task),
+                    }}
+                  />
                 </TableCell>
               </TableRow>
             ) : (

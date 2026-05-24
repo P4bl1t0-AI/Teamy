@@ -8,10 +8,11 @@ import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { Profile } from '@/types'
-import { Mail, UserCircle, Pencil, Check, X } from 'lucide-react'
+import { Mail, UserCircle, Pencil, Check, X, Users } from 'lucide-react'
 import { DAY_KEYS, PRESENCE_OPTIONS, PRESENCE_LABELS } from '@/lib/constants'
 import { updateProfileDefaults } from '@/app/calendar-actions'
 import { toast } from 'sonner'
+import { EmptyState } from '@/components/ui/empty-state'
 
 const DAY_KEY_TO_LABEL: Record<string, string> = {
   monday: 'Lundi',
@@ -68,16 +69,15 @@ export function MemberList({ refreshKey }: { refreshKey: number }) {
   }
 
   if (loading)
-    return <p className="text-muted-foreground">Chargement des membres...</p>
+    return <EmptyState icon={Users} title="Chargement..." description="Récupération des membres en cours." />
 
   if (members.length === 0)
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Aucun membre pour le moment.</p>
-        <p className="text-sm text-muted-foreground mt-1">
-          Ajoutez votre première équipe.
-        </p>
-      </div>
+      <EmptyState
+        icon={Users}
+        title="Aucun membre"
+        description="Ajoutez votre premier membre pour commencer à gérer votre équipe."
+      />
     )
 
   return (
