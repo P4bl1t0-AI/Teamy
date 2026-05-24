@@ -22,6 +22,20 @@ export async function getCalendarEntries(year: number, month: number) {
   return data ?? []
 }
 
+export async function getCalendarEntriesRange(startDate: string, endDate: string) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("calendar_entries")
+    .select("*, profiles(id, full_name)")
+    .gte("date", startDate)
+    .lte("date", endDate)
+    .order("date", { ascending: true })
+
+  if (error) throw new Error(error.message)
+  return data ?? []
+}
+
 export async function setDayStatus(
   profileId: string,
   date: string,
