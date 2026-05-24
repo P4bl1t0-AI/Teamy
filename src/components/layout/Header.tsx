@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LogOut, Users, ListChecks, Calendar, Palette } from 'lucide-react'
+import { LogOut, Users, ListChecks, Calendar } from 'lucide-react'
 
 export function Header() {
   const { user, signOut } = useAuth()
@@ -62,11 +62,6 @@ export function Header() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem className="cursor-pointer p-0">
-                <Link href="/design-system" className="flex items-center w-full px-2 py-1.5">
-                  <Palette size={14} className="mr-2" /> Design System
-                </Link>
-              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={signOut}
                 className="text-red-600 cursor-pointer"

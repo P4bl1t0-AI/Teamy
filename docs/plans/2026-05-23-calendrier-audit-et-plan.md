@@ -344,3 +344,76 @@ src/components/calendar/WeekView.tsx        (remplacé par PlanningView)
 - [ ] Faire un build (`npm run build`) AVANT de coder pour s'assurer que l'état de départ est clean
 - [ ] Après chaque fichier créé/modifié, re-build pour vérifier
 - [ ] **Mettre à jour ce plan à la fin de chaque session**
+
+---
+
+## 8. DESIGN SYSTEM — Recommandations & Références
+
+> Cette section documente les références de design modernes trouvées sur internet et les recommandations pour améliorer l'UI/UX de Teamy.
+
+### 8.1 Références analysées
+
+| Référence | URL | Ce qui est remarquable |
+|-----------|-----|------------------------|
+| **Linear** | linear.app | Dense, dark-ready, bordures ultra-fines (1px), typographie monospace pour les IDs, sidebar icon-only rétractable, command palette (Cmd+K) |
+| **Vercel** | vercel.com | Fond blanc pur, cards avec ombre légère, gradients subtils, typographie bold sur les titres, espacement généreux, animations fluides |
+| **shadcn Dashboard** | ui.shadcn.com/examples/dashboard | Sidebar + main content, metric cards avec sparklines, tables avec sorting/filters, tabs pour navigation secondaire |
+| **Dub** | dub.co | Cards avec bordures colorées par section, typographie large et aérée, sections alternées clair/gris, testimonials intégrés |
+
+### 8.2 Patterns communs aux designs modernes (2024-2025)
+
+#### Layout
+- **Sidebar navigation** (icon + label, rétractable) plutôt que header horizontal
+- **Main content area** avec padding généreux (24-32px)
+- **Cards** pour regrouper les informations (pas de fond gris global)
+- **Breadcrumbs** ou header de page avec titre + actions principales
+
+#### Couleurs
+- **Fond blanc pur** (`#ffffff`) ou très légèrement teinté — pas de gris global
+- **Bordures fines** (`1px solid hsl(var(--border))`) — pas de shadows lourdes
+- **Accents colorés** utilisés avec parcimonie (badges, icônes, états actifs)
+- **Texte hiérarchisé** : noir/gris très foncé pour les titres, gris moyen pour le corps, gris clair pour les métadonnées
+
+#### Typographie
+- **Inter** ou **Geist** (sans-serif moderne)
+- **Titres** : bold (700), tracking tight (-0.02em)
+- **Corps** : regular (400), line-height 1.5
+- **Monospace** pour les IDs, dates techniques, code
+
+#### Composants
+- **Buttons** : radius cohérent (6-8px), pas de bordures sauf outline variant
+- **Inputs** : fond blanc, bordure grise, focus ring subtil (2px primary/20%)
+- **Tables** : header gris clair, lignes séparées par bordure fine, hover subtil
+- **Badges** : pill shape (radius-full), couleur de fond très pâle + texte saturé
+
+#### Micro-interactions
+- **Transitions** : 150ms ease-in-out sur les états (hover, focus, active)
+- **Hover cards** : légère élévation (shadow-sm) ou changement de bordure
+- **Loading states** : skeleton screens plutôt que spinners
+- **Empty states** : illustration + texte explicite + CTA
+
+### 8.3 Recommandations pour Teamy
+
+#### Prioritaire (quick wins)
+- [ ] **Remplacer le fond gris global** par du blanc pur, utiliser des cards avec bordure
+- [ ] **Ajouter une sidebar** à gauche (Tâches, Membres, Calendrier, Paramètres) — libérer le header
+- [ ] **Uniformiser les boutons** : même radius, même padding vertical
+- [ ] **Améliorer les empty states** : illustration + texte + bouton d'action
+
+#### Moyen terme
+- [ ] **Refonte du TaskBoard** : cards au lieu de lignes, tags colorés, assignation visuelle
+- [ ] **Dashboard d'accueil** : métriques clés (tâches en cours, membres absents, etc.)
+- [ ] **Command palette** (Cmd+K) pour navigation rapide
+- [ ] **Dark mode** natif (toggle dans la sidebar)
+
+#### Long terme
+- [ ] **Animations** : transitions de page, apparition des modals, drag & drop
+- [ ] **Responsive mobile** : sidebar devient bottom nav, cards full-width
+- [ ] **Personnalisation** : choix de la densité (compact / confortable)
+
+### 8.4 Ressources
+
+- **shadcn/ui Blocks** : ui.shadcn.com/blocks — layouts prêts à l'emploi
+- **Tailwind UI** : tailwindui.com — composants premium (payant)
+- **Radix UI Primitives** : radix-ui.com — base accessible pour composants custom
+- **Lucide Icons** : lucide.dev — icônes déjà utilisées dans le projet
