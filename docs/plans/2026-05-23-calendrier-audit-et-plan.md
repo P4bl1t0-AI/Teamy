@@ -1,11 +1,11 @@
 # 📋 Audit & Plan — Feature Calendrier (Congés & Présence)
 
 **Date d'audit** : 2026-05-23  
-**Date de mise à jour** : 2026-05-24 (session en cours)  
+**Date de mise à jour** : 2026-05-24 (bugfix sauvegarde jours par défaut)  
 **Projet** : Teamy  
 **Repo local** : `/home/p4bl1/projects/teamy/`  
 **Supabase** : `https://pvlcmthyhwssllhlibwt.supabase.co`  
-**Branche** : `main` (commits `873d00c`, `91d8ee7`, `2124548`, `56baf18`, `cd8f75f`)  
+**Branche** : `main` (commits `873d00c` → `2517651`)  
 **Déploiement** : ✅ https://teamy-beryl.vercel.app
 
 ---
@@ -127,11 +127,12 @@ Le champ `default_days` est de type `Json | null`. Format attendu : `{"monday":"
 - [x] Tableau des 7 jours avec badges membres
 - [x] Clic sur cellule semaine ouvre `DayEditModal`
 
-### 2.7 Corrections de bugs (commit `56baf18`)
+### 2.7 Corrections de bugs
 - [x] Modal `DayEditModal` reste ouverte après changement (ne ferme plus `onClose` à chaque save)
 - [x] Badge "Sauvegardé" par membre modifié
 - [x] Bouton "Fermer" en bas de modal
 - [x] Jours fériés récurrents : `getTeamHolidays` remappe les dates sur l'année demandée (MM-DD)
+- [x] **Sauvegarde jours par défaut (`MemberList`) : `FormData` ne capturait pas les valeurs du `<Select>` shadcn/ui → remplacé par state contrôlé (`useState` + `value`/`onValueChange`)**
 
 ### 2.8 Design visuel — Spécifications
 
@@ -203,6 +204,7 @@ Le champ `default_days` est de type `Json | null`. Format attendu : `{"monday":"
 4. **Coder avant d'avoir les env vars** — le `npm run build` échoue sans `NEXT_PUBLIC_SUPABASE_URL`
 5. **Ne pas tester le build à chaque étape** — accumuler les erreurs TypeScript
 6. **Ne pas mettre à jour le plan après chaque session** — le plan devient obsolète et induit en erreur
+7. **Utiliser `new FormData()` avec des composants shadcn/ui `<Select>`** — le composant `<Select>` de shadcn/ui ne rend pas un `<select>` HTML natif. `FormData` ne capture jamais les valeurs. Toujours utiliser un state contrôlé (`value` + `onValueChange`) avec shadcn/ui Select.
 
 ### Ce qui a bien marché :
 - Créer `src/types/index.ts` comme facade pour centraliser tous les types exportés
