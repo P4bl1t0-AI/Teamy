@@ -1,11 +1,11 @@
 # 📋 Audit & Plan — Feature Calendrier (Congés & Présence)
 
 **Date d'audit** : 2026-05-23  
-**Date de mise à jour** : 2026-05-24 (bugfix sauvegarde jours par défaut)  
+**Date de mise à jour** : 2026-05-24 (redesign planning — scroll horizontal 4 semaines)  
 **Projet** : Teamy  
 **Repo local** : `/home/p4bl1/projects/teamy/`  
 **Supabase** : `https://pvlcmthyhwssllhlibwt.supabase.co`  
-**Branche** : `main` (commits `873d00c` → `2517651`)  
+**Branche** : `main` (commits `873d00c` → `ed045de`)  
 **Déploiement** : ✅ https://teamy-beryl.vercel.app
 
 ---
@@ -28,7 +28,7 @@
 | `/login` | Connexion |
 | `/inscription` | Inscription |
 | `/membres` | Liste des membres + formulaire |
-| **`/calendrier`** | **Calendrier congés & présence ✅** |
+- **`/calendrier`** | **Planning 4 semaines (scroll horizontal) ✅** |
 | `/profil` | Profil (créé dans une autre session) |
 
 ### 1.3 Schéma DB (migration 001 + 002 appliquées sur remote)
@@ -60,20 +60,22 @@ Le champ `default_days` est de type `Json | null`. Format attendu : `{"monday":"
 - shadcn/ui : button, card, dialog, dropdown-menu, input, label, select, separator, sonner, table, avatar, badge, **textarea, checkbox**
 - Custom existants : TaskBoard, TaskForm, MemberList, MemberForm, StatusBadge, PriorityBadge
 - **Calendrier** :
-  - `CalendarGrid.tsx` — grille mensuelle avec nav + **filtrage membres + toggle Mois/Semaine**
-  - `DayCell.tsx` — cellule jour avec badges membres
+  - `CalendarGrid.tsx` — header nav + filtrage membres + intégration PlanningView
+  - `PlanningView.tsx` — **tableau 4 semaines scroll horizontal, membres en lignes, jours en colonnes**
   - `DayEditModal.tsx` — édition du statut d'un membre sur un jour (modal persistante, badge "Sauvegardé")
   - `CompanyHolidayForm.tsx` — gestion des jours fériés
   - `CalendarLegend.tsx` — légende des couleurs
-  - **`WeekView.tsx`** — **vue semaine alternative sous forme de tableau**
+  - ~~`DayCell.tsx`~~ — supprimé (remplacé par PlanningView)
+  - ~~`WeekView.tsx`~~ — supprimé (remplacé par PlanningView)
 
 ### 1.6 Server Actions
 - `createTask`, `updateTask`, `deleteTask` (`src/app/actions.ts`)
 - **Calendrier** (`src/app/calendar-actions.ts`) :
   - `getCalendarEntries(year, month)`
+  - **`getCalendarEntriesRange(startDate, endDate)`** — **nouveau : charge un intervalle de dates**
   - `setDayStatus(profileId, date, presence, note?)`
   - `deleteCalendarEntry(id)`
-  - `getTeamHolidays(year)` — **jours fériés récurrents remappés sur l'année demandée (MM-DD)**
+  - `getTeamHolidays(year)` — jours fériés récurrents remappés sur l'année demandée (MM-DD)
   - `addTeamHoliday(date, name, isRecurring)`
   - `removeTeamHoliday(id)`
   - `getProfiles()`
@@ -92,6 +94,7 @@ Le champ `default_days` est de type `Json | null`. Format attendu : `{"monday":"
 ### 2.1 Backend
 - [x] **Actions serveur calendrier** : `src/app/calendar-actions.ts`
   - `getCalendarEntries(year, month)`
+  - `getCalendarEntriesRange(startDate, endDate)`
   - `setDayStatus(profileId, date, presence, note?)`
   - `getTeamHolidays(year)`
   - `addTeamHoliday(date, name, isRecurring)`
@@ -99,12 +102,13 @@ Le champ `default_days` est de type `Json | null`. Format attendu : `{"monday":"
   - `updateProfileDefaults(profileId, defaults)`
 
 ### 2.2 Composants UI Calendrier
-- [x] `CalendarGrid.tsx`
-- [x] `DayCell.tsx`
-- [x] `DayEditModal.tsx`
-- [x] `CompanyHolidayForm.tsx`
-- [x] `CalendarLegend.tsx`
-- [x] **`WeekView.tsx`** (vue semaine)
+- [x] `CalendarGrid.tsx` — header, nav, filtres
+- [x] `PlanningView.tsx` — tableau 4 semaines scroll horizontal
+- [x] `DayEditModal.tsx` — édition du statut d'un membre sur un jour
+- [x] `CompanyHolidayForm.tsx` — gestion des jours fériés
+- [x] `CalendarLegend.tsx` — légende des couleurs
+- ~~[x] `DayCell.tsx`~~ — supprimé
+- ~~[x] `WeekView.tsx`~~ — supprimé
 
 ### 2.3 Page calendrier
 - [x] `src/app/calendrier/page.tsx`
@@ -113,19 +117,25 @@ Le champ `default_days` est de type `Json | null`. Format attendu : `{"monday":"
 ### 2.4 Paramétrage des jours par défaut
 - [x] `MemberForm.tsx` — 5 selects (Lundi–Vendredi) via `default_days` JSON
 - [x] `/api/members` route mis à jour pour recevoir `default_days`
-- [x] Fallback `default_days` dans `DayCell` quand pas d'entrée explicite
-- [x] **`MemberList.tsx` — édition inline des jours par défaut des membres existants (icône crayon)**
+- [x] Fallback `default_days` dans `PlanningView` quand pas d'entrée explicite
+- [x] `MemberList.tsx` — édition inline des jours par défaut des membres existants (icône crayon)
 
-### 2.5 Filtrage des membres sur le calendrier
+### 2.5 Filtrage des membres sur le planning
 - [x] DropdownMenu avec checkboxes par membre
 - [x] Badge affichant le ratio sélectionné / total
 - [x] Boutons "Tous" / "Aucun"
-- [x] Grille et vue semaine synchronisées avec le filtre
+- [x] PlanningView synchronisé avec le filtre
 
-### 2.6 Vue semaine alternative
-- [x] Toggle Mois / Semaine avec navigation synchronisée
-- [x] Tableau des 7 jours avec badges membres
-- [x] Clic sur cellule semaine ouvre `DayEditModal`
+### 2.6 Vue Planning (remplace mois + semaine)
+- [x] **4 semaines affichées** : semaine courante + 3 suivantes (28 jours)
+- [x] **Membres en lignes** — colonne fixe à gauche avec nom + initiale
+- [x] **Jours en colonnes** — scroll horizontal
+- [x] **Week-ends grisés** — non cliquables, texte gris
+- [x] **Jours fériés** — visibles dans le header avec nom
+- [x] **Aujourd'hui** — cellule et header surlignés
+- [x] **Séparateurs de semaine** — bordure verticale entre les semaines
+- [x] **Navigation par semaine** — ← → et bouton "Aujourd'hui"
+- [x] **Clic sur jour ouvré** — ouvre `DayEditModal`
 
 ### 2.7 Corrections de bugs
 - [x] Modal `DayEditModal` reste ouverte après changement (ne ferme plus `onClose` à chaque save)
@@ -143,17 +153,19 @@ Le champ `default_days` est de type `Json | null`. Format attendu : `{"monday":"
 | Télétravail (`remote`) | `bg-blue-100 text-blue-800 border-blue-300` |
 | Absence (`leave`) | `bg-amber-100 text-amber-800 border-amber-300` |
 | Férié (`holiday`) | `bg-rose-100 text-rose-800 border-rose-300` |
-| Non défini | `bg-gray-50 text-gray-400` |
-| Jour férié/collectif | Bandeau `bg-rose-100 text-rose-800` en haut de cellule |
+| Non défini | `bg-gray-50 text-gray-300` |
 
-#### Layout calendrier :
-- Header : Mois/Année + flèches nav + bouton "Aujourd'hui" + **toggle Mois/Semaine**
-- **Filtre membres** : DropdownMenu avec checkboxes + badge ratio
-- Jours de la semaine : Lun, Mar, Mer, Jeu, Ven, Sam, Dim
-- Cellules : hauteur fixe ~120px
-- Badges ronds avec initiale + couleur par membre
-- Clic = modal d'édition
-- Survol = tooltip nom + statut
+#### Layout Planning :
+- Header : "Planning" + flèches nav semaine + bouton "Aujourd'hui" + filtre membres + légende
+- Tableau scroll horizontal (`overflow-x-auto`) avec `min-w-[900px]`
+- Colonne fixe gauche (Membre) : `sticky left-0` avec fond opaque
+- 28 colonnes de jours : Lun→Dim × 4 semaines
+- Séparateur de semaine : `border-l-2` toutes les 7 colonnes
+- Week-ends : fond `bg-gray-50/50`, texte grisé, non cliquables
+- Jours fériés : nom affiché sous la date dans le header
+- Aujourd'hui : header `bg-primary/10`, cellule `bg-primary/5`
+- Cellule jour ouvré : badge coloré avec label complet (ex: "Sur site", "Télétravail")
+- Clic sur cellule jour ouvré = modal d'édition
 
 ---
 
@@ -168,24 +180,32 @@ Le champ `default_days` est de type `Json | null`. Format attendu : `{"monday":"
 - [x] `src/app/calendar-actions.ts` créé avec toutes les fonctions
 
 ### Phase 3 : Composants UI
-- [x] `CalendarLegend`, `DayCell`, `CalendarGrid`, `DayEditModal`, `CompanyHolidayForm`
-- [x] `WeekView.tsx` (vue semaine)
+- [x] `CalendarLegend`, `CalendarGrid`, `DayEditModal`, `CompanyHolidayForm`
+- [x] `PlanningView.tsx` (tableau 4 semaines scroll horizontal)
+- ~~[x] `DayCell.tsx`~~ — supprimé
+- ~~[x] `WeekView.tsx`~~ — supprimé
 
 ### Phase 4 : Page calendrier
-- [x] `src/app/calendrier/page.tsx` + lien Header
+- [x] `src/app/calendrier/page.tsx` — charge 28 jours via `getCalendarEntriesRange`
+- [x] Lien "Calendrier" dans Header (`Calendar` icon)
 
 ### Phase 5 : Jours par défaut
 - [x] `MemberForm` modifié avec selects Lundi–Vendredi
-- [x] Logique fallback `DayCell` via `default_days`
+- [x] Logique fallback `PlanningView` via `default_days`
 - [x] `MemberList` : édition inline des jours par défaut des membres existants
 
 ### Phase 6 : Filtrage membres
 - [x] DropdownMenu checkboxes dans `CalendarGrid`
 - [x] Badge ratio + boutons Tous/Aucun
 
-### Phase 7 : Vue semaine
-- [x] `WeekView.tsx` créé
-- [x] Toggle Mois/Semaine dans `CalendarGrid`
+### Phase 7 : Vue Planning (remplace mois + semaine)
+- [x] `PlanningView.tsx` créé avec tableau scroll horizontal
+- [x] 4 semaines (28 jours), membres en lignes, jours en colonnes
+- [x] Colonne membre sticky à gauche
+- [x] Week-ends grisés, non cliquables
+- [x] Jours fériés dans le header
+- [x] Navigation par semaine (← → Aujourd'hui)
+- [x] Clic sur jour ouvré = DayEditModal
 
 ### Phase 8 : Tests & Build
 - [x] `npm run build` → 0 warning
@@ -211,6 +231,7 @@ Le champ `default_days` est de type `Json | null`. Format attendu : `{"monday":"
 - Résoudre les conflits de merge via `git checkout --theirs` sur les nouveaux fichiers
 - Supprimer le doublon `EditDayDialog.tsx` (créé dans une autre session) qui bloquait le build Vercel
 - Fermer la modal manuellement (bouton "Fermer") plutôt que auto-close à chaque save — meilleure UX pour éditer plusieurs membres
+- **Le redesign PlanningView** en tableau horizontal est beaucoup plus lisible que la grille mois (membres en lignes + jours en colonnes)
 
 ---
 
@@ -221,11 +242,10 @@ Le champ `default_days` est de type `Json | null`. Format attendu : `{"monday":"
 src/app/calendrier/page.tsx
 src/app/calendar-actions.ts
 src/components/calendar/CalendarGrid.tsx
-src/components/calendar/DayCell.tsx
 src/components/calendar/DayEditModal.tsx
 src/components/calendar/CompanyHolidayForm.tsx
 src/components/calendar/CalendarLegend.tsx
-src/components/calendar/WeekView.tsx          ← vue semaine
+src/components/calendar/PlanningView.tsx     ← tableau 4 semaines scroll horizontal
 src/components/ui/checkbox.tsx
 src/components/ui/textarea.tsx
 src/types/index.ts
@@ -237,7 +257,7 @@ src/app/actions.ts                          (import @/types)
 src/app/api/members/route.ts                (+ default_days)
 src/components/layout/Header.tsx            (+ lien Calendrier)
 src/components/members/MemberForm.tsx       (+ selects jours par défaut)
-src/components/members/MemberList.tsx       (+ édition inline jours par défaut)
+src/components/members/MemberList.tsx       (+ édition inline jours par défaut + bugfix sauvegarde)
 src/components/tasks/TaskBoard.tsx          (import @/types)
 src/components/tasks/TaskForm.tsx           (import @/types)
 src/components/tasks/StatusBadge.tsx        (import @/types)
@@ -251,6 +271,8 @@ src/types/database.ts                       (régénéré par supabase)
 ### Fichiers supprimés :
 ```
 src/components/calendar/EditDayDialog.tsx   (doublon de DayEditModal, import cassé)
+src/components/calendar/DayCell.tsx         (remplacé par PlanningView)
+src/components/calendar/WeekView.tsx        (remplacé par PlanningView)
 ```
 
 ---
@@ -288,12 +310,13 @@ src/components/calendar/EditDayDialog.tsx   (doublon de DayEditModal, import cas
 **Améliorations futures possibles** (hors scope actuel) :
 - ~~Édition des jours par défaut d'un membre existant~~ ✅ **FAIT**
 - ~~Filtrage des membres affichés sur le calendrier~~ ✅ **FAIT**
-- ~~Vue semaine alternative~~ ✅ **FAIT**
+- ~~Vue Planning (4 semaines scroll horizontal)~~ ✅ **FAIT**
 - Export PDF/iCal du calendrier
-- Vue liste alternative
+- Vue annuelle (heatmap)
 - Notifications de conflits (2 personnes en congé sur un même projet)
 - Drag & drop pour changer rapidement le statut d'un membre
-- Vue annuelle (heatmap)
+- Navigation directe à une date précise (date picker)
+- Affichage du nombre total de jours de congé par membre sur la période
 
 **Checklist à LIRE avant chaque session** :
 - [ ] Lire ce fichier plan
