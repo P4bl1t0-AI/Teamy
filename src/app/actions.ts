@@ -56,3 +56,51 @@ export async function deleteTask(id: string) {
   if (error) throw new Error(error.message)
   revalidatePath("/")
 }
+
+// ─── Quick update (drag & drop) ───
+
+export async function updateTaskQuick(
+  id: string,
+  data: { status?: TaskStatus; assigned_to?: string | null }
+) {
+  const supabase = await createClient()
+  const { error } = await supabase.from("tasks").update(data).eq("id", id)
+  if (error) throw new Error(error.message)
+  revalidatePath("/")
+}
+
+// ─── Task Comments ───
+
+export async function getTaskComments(taskId: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("task_comments")
+    .select("*, profiles(id, full_name)")
+    .eq("task_id", taskId)
+    .order("created_at", { ascending: true })
+  if (error) throw new Error(error.message)
+  return data ?? []
+}
+
+export async function addTaskComment(taskId: string, content: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error("Non authentifié")
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("user_id", user.id)
+    .single()
+
+  if (!profile) throw new Error("Profil non trouvé")
+
+  const { error } = await supabase.from("task_comments").insert({
+    task_id: taskId,
+    profile_id: profile.id,
+    content,
+  })
+
+  if (error) throw new Error(error.message)
+  revalidatePath("/")
+}

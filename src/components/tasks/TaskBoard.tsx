@@ -22,9 +22,10 @@ import { StatusBadge } from './StatusBadge'
 import { PriorityBadge } from './PriorityBadge'
 import { TASK_STATUS_LABELS, TASK_PRIORITY_LABELS } from '@/lib/constants'
 import type { Task, TaskStatus, TaskPriority, Profile } from '@/types'
-import { Pencil, Trash2, Plus, ListChecks } from 'lucide-react'
+import { Pencil, Trash2, Plus, ListChecks, LayoutGrid, List } from 'lucide-react'
 import { EmptyState } from '@/components/ui/empty-state'
 import { TaskForm } from './TaskForm'
+import { TaskKanbanBoard } from './TaskKanbanBoard'
 import { createTask, updateTask, deleteTask } from '@/app/actions'
 import { toast } from 'sonner'
 
@@ -41,6 +42,7 @@ export function TaskBoard({ tasks, members, currentProfileId }: TaskBoardProps) 
   const [assigneeFilter, setAssigneeFilter] = useState<string | null>('all')
   const [createOpen, setCreateOpen] = useState(false)
   const [editTask, setEditTask] = useState<Task | null>(null)
+  const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list')
 
   const membersMap = useMemo(() => {
     const map = new Map<string, string>()
@@ -158,91 +160,115 @@ export function TaskBoard({ tasks, members, currentProfileId }: TaskBoardProps) 
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={() => setCreateOpen(true)} className="w-full sm:w-auto">
-          <Plus size={16} className="mr-1" /> Nouvelle tâche
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center border rounded-md overflow-hidden">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors ${
+                viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'
+              }`}
+            >
+              <List size={14} /> Liste
+            </button>
+            <button
+              onClick={() => setViewMode('kanban')}
+              className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors ${
+                viewMode === 'kanban' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'
+              }`}
+            >
+              <LayoutGrid size={14} /> Kanban
+            </button>
+          </div>
+          <Button onClick={() => setCreateOpen(true)} className="w-full sm:w-auto">
+            <Plus size={16} className="mr-1" /> Nouvelle tâche
+          </Button>
+        </div>
       </div>
 
-      <div className="border rounded-lg bg-white overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Titre</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead>Priorité</TableHead>
-              <TableHead>Assigné à</TableHead>
-              <TableHead>Échéance</TableHead>
-              <TableHead className="w-24">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredTasks.length === 0 ? (
+      {viewMode === 'kanban' ? (
+        <TaskKanbanBoard tasks={filteredTasks} members={members} currentProfileId={currentProfileId} />
+      ) : (
+        <div className="border rounded-lg bg-white overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={6} className="py-8">
-                  <EmptyState
-                    icon={ListChecks}
-                    title="Aucune tâche"
-                    description="Créez votre première tâche pour commencer."
-                    action={{
-                      label: 'Nouvelle tâche',
-                      onClick: () => setEditTask({} as Task),
-                    }}
-                  />
-                </TableCell>
+                <TableHead>Titre</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Priorité</TableHead>
+                <TableHead>Assigné à</TableHead>
+                <TableHead>Échéance</TableHead>
+                <TableHead className="w-24">Actions</TableHead>
               </TableRow>
-            ) : (
-              filteredTasks.map((task) => (
-                <TableRow key={task.id}>
-                  <TableCell>
-                    <div className="font-medium">{task.title}</div>
-                    {task.description && (
-                      <div className="text-sm text-muted-foreground line-clamp-1">
-                        {task.description}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={task.status} />
-                  </TableCell>
-                  <TableCell>
-                    <PriorityBadge priority={task.priority} />
-                  </TableCell>
-                  <TableCell>
-                    {task.assigned_to
-                      ? membersMap.get(task.assigned_to) || 'Inconnu'
-                      : '—'}
-                  </TableCell>
-                  <TableCell>
-                    {task.due_date
-                      ? new Date(task.due_date).toLocaleDateString('fr-FR')
-                      : '—'}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => setEditTask(task)}
-                      >
-                        <Pencil size={14} />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-red-600"
-                        onClick={() => handleDelete(task.id)}
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {filteredTasks.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-8">
+                    <EmptyState
+                      icon={ListChecks}
+                      title="Aucune tâche"
+                      description="Créez votre première tâche pour commencer."
+                      action={{
+                        label: 'Nouvelle tâche',
+                        onClick: () => setEditTask({} as Task),
+                      }}
+                    />
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ) : (
+                filteredTasks.map((task) => (
+                  <TableRow key={task.id}>
+                    <TableCell>
+                      <div className="font-medium">{task.title}</div>
+                      {task.description && (
+                        <div className="text-sm text-muted-foreground line-clamp-1">
+                          {task.description}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={task.status} />
+                    </TableCell>
+                    <TableCell>
+                      <PriorityBadge priority={task.priority} />
+                    </TableCell>
+                    <TableCell>
+                      {task.assigned_to
+                        ? membersMap.get(task.assigned_to) || 'Inconnu'
+                        : '—'}
+                    </TableCell>
+                    <TableCell>
+                      {task.due_date
+                        ? new Date(task.due_date).toLocaleDateString('fr-FR')
+                        : '—'}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => setEditTask(task)}
+                        >
+                          <Pencil size={14} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-600"
+                          onClick={() => handleDelete(task.id)}
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       <TaskForm
         open={createOpen}
