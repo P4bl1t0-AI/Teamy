@@ -1,5 +1,5 @@
 import { CalendarGrid } from '@/components/calendar/CalendarGrid'
-import { getCalendarEntriesRange, getTeamHolidays, getProfiles } from '@/app/calendar-actions'
+import { getCalendarEntriesRange, getTeamHolidaysForRange, getProfiles } from '@/app/calendar-actions'
 
 export default async function CalendrierPage({
   searchParams,
@@ -28,7 +28,7 @@ export default async function CalendrierPage({
 
   const [entries, holidays, profiles] = await Promise.all([
     getCalendarEntriesRange(startDate, endDate),
-    getTeamHolidays(year),
+    getTeamHolidaysForRange(startDate, endDate),
     getProfiles(),
   ])
 

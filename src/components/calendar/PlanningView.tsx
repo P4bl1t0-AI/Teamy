@@ -15,8 +15,13 @@ interface PlanningViewProps {
 function getPresence(
   profile: Profile,
   dateStr: string,
-  allEntries: CalendarEntry[]
+  allEntries: CalendarEntry[],
+  holidays: TeamHoliday[]
 ): PresenceType | null {
+  // Jour férié prime sur tout
+  const holiday = holidays.find((h) => h.date === dateStr)
+  if (holiday) return 'holiday'
+
   const entry = allEntries.find((e) => e.profile_id === profile.id && e.date === dateStr)
   if (entry) return entry.presence
 
@@ -135,10 +140,11 @@ export function PlanningView({ currentDate, entries, holidays, profiles, onDateC
                   </td>
                   {days.map((date, idx) => {
                     const dateStr = date.toISOString().split('T')[0]
-                    const presence = getPresence(profile, dateStr, entries)
+                    const presence = getPresence(profile, dateStr, entries, holidays)
                     const isWeekend = date.getDay() === 0 || date.getDay() === 6
                     const isToday = dateStr === todayStr
                     const isWeekStart = idx % 7 === 0 && idx > 0
+                    const isHoliday = presence === 'holiday'
 
                     if (isWeekend) {
                       return (
@@ -158,10 +164,10 @@ export function PlanningView({ currentDate, entries, holidays, profiles, onDateC
                     return (
                       <td
                         key={dateStr}
-                        className={`p-1 text-center cursor-pointer hover:opacity-80 transition-opacity ${
+                        className={`p-1 text-center ${isHoliday ? '' : 'cursor-pointer hover:opacity-80 transition-opacity'} ${
                           isToday ? 'bg-primary/5' : ''
                         } ${isWeekStart ? 'border-l-2 border-l-border' : ''}`}
-                        onClick={() => onDateClick(date)}
+                        onClick={() => !isHoliday && onDateClick(date)}
                       >
                         <div
                           className={`inline-flex items-center justify-center rounded-md px-1.5 py-0.5 text-[11px] font-medium ${bgClass} ${textClass} border`}

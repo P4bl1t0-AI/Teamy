@@ -7,20 +7,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { PRESENCE_OPTIONS } from '@/lib/constants'
-import { Check } from 'lucide-react'
-import type { Profile, CalendarEntry, PresenceType } from '@/types'
+import { Check, CalendarX2 } from 'lucide-react'
+import type { Profile, CalendarEntry, PresenceType, TeamHoliday } from '@/types'
 import { setDayStatus, deleteCalendarEntry } from '@/app/calendar-actions'
 
 interface DayEditModalProps {
   date: Date
   profiles: Profile[]
   entries: CalendarEntry[]
+  holidays: TeamHoliday[]
   onClose: () => void
 }
 
-export function DayEditModal({ date, profiles, entries, onClose }: DayEditModalProps) {
+export function DayEditModal({ date, profiles, entries, holidays, onClose }: DayEditModalProps) {
   const dateStr = date.toISOString().split('T')[0]
   const label = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+
+  const holiday = holidays.find((h) => h.date === dateStr)
+  const isHoliday = !!holiday
 
   const [loading, setLoading] = useState<string | null>(null)
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
@@ -58,8 +62,20 @@ export function DayEditModal({ date, profiles, entries, onClose }: DayEditModalP
         <DialogHeader>
           <DialogTitle className="capitalize">{label}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 mt-2">
-          {profiles.map((profile) => {
+      <div className="space-y-4 mt-2">
+        {isHoliday ? (
+          <div className="flex flex-col items-center justify-center py-10 text-center space-y-3">
+            <CalendarX2 size={40} className="text-rose-400" />
+            <div>
+              <p className="font-medium text-rose-700 text-lg">Jour férié</p>
+              <p className="text-sm text-muted-foreground mt-1">{holiday.name}</p>
+            </div>
+            <p className="text-xs text-muted-foreground max-w-[280px]">
+              Les jours fériés s&apos;appliquent automatiquement à tous les membres de l&apos;équipe.
+            </p>
+          </div>
+        ) : (
+          profiles.map((profile) => {
             const entry = getEntry(profile.id)
             const currentValue = entry?.presence ?? ''
             const isSaved = savedIds.has(profile.id)
@@ -121,8 +137,9 @@ export function DayEditModal({ date, profiles, entries, onClose }: DayEditModalP
                 </div>
               </div>
             )
-          })}
-        </div>
+          })
+        )}
+      </div>
         <div className="mt-4 flex justify-end">
           <Button onClick={onClose}>Fermer</Button>
         </div>

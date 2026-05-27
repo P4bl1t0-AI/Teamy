@@ -80,20 +80,22 @@ export async function deleteCalendarEntry(id: string) {
 
 // ─── Team Holidays ───
 
-export async function getTeamHolidays(year: number) {
+export async function getTeamHolidaysForRange(startDate: string, endDate: string) {
   const supabase = await createClient()
+  const startYear = parseInt(startDate.split("-")[0])
+  const endYear = parseInt(endDate.split("-")[0])
 
-  // 1. Fériés non-récurrents de l'année demandée
+  // 1. Fériés non-récurrents dans la plage de dates
   const { data: fixedHolidays, error: err1 } = await supabase
     .from("team_holidays")
     .select("*")
-    .gte("date", `${year}-01-01`)
-    .lte("date", `${year}-12-31`)
+    .gte("date", startDate)
+    .lte("date", endDate)
     .eq("is_recurring", false)
     .order("date", { ascending: true })
   if (err1) throw new Error(err1.message)
 
-  // 2. Fériés récurrents (toutes années confondues) → on remappe l'année
+  // 2. Fériés récurrents → on remappe sur chaque année de la plage
   const { data: recurringHolidays, error: err2 } = await supabase
     .from("team_holidays")
     .select("*")
@@ -101,10 +103,16 @@ export async function getTeamHolidays(year: number) {
     .order("date", { ascending: true })
   if (err2) throw new Error(err2.message)
 
-  const mappedRecurring = (recurringHolidays ?? []).map((h) => {
+  const mappedRecurring: { id: string; date: string; name: string; is_recurring: boolean; created_at: string }[] = []
+  for (const h of recurringHolidays ?? []) {
     const [, month, day] = h.date.split("-")
-    return { ...h, date: `${year}-${month}-${day}` }
-  })
+    for (let year = startYear; year <= endYear; year++) {
+      const mappedDate = `${year}-${month}-${day}`
+      if (mappedDate >= startDate && mappedDate <= endDate) {
+        mappedRecurring.push({ ...h, date: mappedDate })
+      }
+    }
+  }
 
   return [...(fixedHolidays ?? []), ...mappedRecurring]
 }

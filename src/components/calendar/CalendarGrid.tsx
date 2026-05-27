@@ -136,6 +136,7 @@ export function CalendarGrid({ initialEntries, initialHolidays, profiles }: Cale
           entries={initialEntries.filter(
             (e) => e.date === selectedDate.toISOString().split('T')[0]
           )}
+          holidays={initialHolidays}
           onClose={() => setSelectedDate(null)}
         />
       )}

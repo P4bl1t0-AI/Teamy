@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,7 +16,14 @@ interface CompanyHolidayFormProps {
   onClose: () => void
 }
 
+function formatDate(dateStr: string): string {
+  // Évite le bug timezone : on parse manuellement YYYY-MM-DD
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('fr-FR')
+}
+
 export function CompanyHolidayForm({ holidays, onClose }: CompanyHolidayFormProps) {
+  const router = useRouter()
   const [date, setDate] = useState('')
   const [name, setName] = useState('')
   const [isRecurring, setIsRecurring] = useState(false)
@@ -30,6 +38,7 @@ export function CompanyHolidayForm({ holidays, onClose }: CompanyHolidayFormProp
       setDate('')
       setName('')
       setIsRecurring(false)
+      router.refresh()
     } catch (err) {
       alert((err as Error).message)
     } finally {
@@ -41,6 +50,7 @@ export function CompanyHolidayForm({ holidays, onClose }: CompanyHolidayFormProp
     if (!confirm('Supprimer ce jour férié ?')) return
     try {
       await removeTeamHoliday(id)
+      router.refresh()
     } catch (err) {
       alert((err as Error).message)
     }
@@ -99,7 +109,7 @@ export function CompanyHolidayForm({ holidays, onClose }: CompanyHolidayFormProp
               <div>
                 <div className="font-medium">{h.name}</div>
                 <div className="text-xs text-muted-foreground">
-                  {new Date(h.date).toLocaleDateString('fr-FR')}
+                  {formatDate(h.date)}
                   {h.is_recurring && ' · Récurrent'}
                 </div>
               </div>
