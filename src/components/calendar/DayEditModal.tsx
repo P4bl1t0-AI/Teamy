@@ -10,6 +10,7 @@ import { PRESENCE_OPTIONS } from '@/lib/constants'
 import { Check, CalendarX2 } from 'lucide-react'
 import type { Profile, CalendarEntry, PresenceType, TeamHoliday } from '@/types'
 import { setDayStatus, deleteCalendarEntry } from '@/app/calendar-actions'
+import { formatDateLocal } from '@/lib/utils'
 
 interface DayEditModalProps {
   date: Date
@@ -20,7 +21,7 @@ interface DayEditModalProps {
 }
 
 export function DayEditModal({ date, profiles, entries, holidays, onClose }: DayEditModalProps) {
-  const dateStr = date.toISOString().split('T')[0]
+  const dateStr = formatDateLocal(date)
   const label = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
 
   const holiday = holidays.find((h) => h.date === dateStr)

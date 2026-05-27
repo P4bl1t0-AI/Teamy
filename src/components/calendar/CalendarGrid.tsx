@@ -10,7 +10,7 @@ import {
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu'
-import { cn } from '@/lib/utils'
+import { cn, formatDateLocal } from '@/lib/utils'
 import { CalendarLegend } from './CalendarLegend'
 import { DayEditModal } from './DayEditModal'
 import { CompanyHolidayForm } from './CompanyHolidayForm'
@@ -134,7 +134,7 @@ export function CalendarGrid({ initialEntries, initialHolidays, profiles }: Cale
           date={selectedDate}
           profiles={filteredProfiles}
           entries={initialEntries.filter(
-            (e) => e.date === selectedDate.toISOString().split('T')[0]
+            (e) => e.date === formatDateLocal(selectedDate)
           )}
           holidays={initialHolidays}
           onClose={() => setSelectedDate(null)}

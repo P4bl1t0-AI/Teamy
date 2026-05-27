@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import type { Profile, CalendarEntry, TeamHoliday, PresenceType } from '@/types'
 import { PRESENCE_COLORS, PRESENCE_LABELS, DAY_LABELS } from '@/lib/constants'
+import { formatDateLocal } from '@/lib/utils'
 
 interface PlanningViewProps {
   currentDate: Date
@@ -25,8 +26,9 @@ function getPresence(
   const entry = allEntries.find((e) => e.profile_id === profile.id && e.date === dateStr)
   if (entry) return entry.presence
 
+  const [yy, mm, dd] = dateStr.split('-').map(Number)
   const dayKey = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][
-    new Date(dateStr).getDay()
+    new Date(yy, mm - 1, dd).getDay()
   ] as string
 
   const defaults = profile.default_days as Record<string, string> | null
@@ -66,7 +68,7 @@ export function PlanningView({ currentDate, entries, holidays, profiles, onDateC
     return result
   }, [currentDate])
 
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr = formatDateLocal(new Date())
 
   // ─── Regroupement par semaine pour les séparateurs ───
   const weeks = useMemo(() => {
@@ -97,7 +99,7 @@ export function PlanningView({ currentDate, entries, holidays, profiles, onDateC
                   Membre
                 </th>
                 {days.map((date, idx) => {
-                  const dateStr = date.toISOString().split('T')[0]
+                  const dateStr = formatDateLocal(date)
                   const holiday = getHoliday(dateStr, holidays)
                   const isToday = dateStr === todayStr
                   const isWeekend = date.getDay() === 0 || date.getDay() === 6
@@ -139,7 +141,7 @@ export function PlanningView({ currentDate, entries, holidays, profiles, onDateC
                     </div>
                   </td>
                   {days.map((date, idx) => {
-                    const dateStr = date.toISOString().split('T')[0]
+                    const dateStr = formatDateLocal(date)
                     const presence = getPresence(profile, dateStr, entries, holidays)
                     const isWeekend = date.getDay() === 0 || date.getDay() === 6
                     const isToday = dateStr === todayStr

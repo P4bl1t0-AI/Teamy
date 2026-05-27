@@ -1,5 +1,6 @@
 import { CalendarGrid } from '@/components/calendar/CalendarGrid'
 import { getCalendarEntriesRange, getTeamHolidaysForRange, getProfiles } from '@/app/calendar-actions'
+import { formatDateLocal } from '@/lib/utils'
 
 export default async function CalendrierPage({
   searchParams,
@@ -22,9 +23,9 @@ export default async function CalendrierPage({
   d.setDate(d.getDate() + diff)
 
   // 4 semaines à partir de ce lundi
-  const startDate = d.toISOString().split('T')[0]
+  const startDate = formatDateLocal(d)
   const endD = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 27)
-  const endDate = endD.toISOString().split('T')[0]
+  const endDate = formatDateLocal(endD)
 
   const [entries, holidays, profiles] = await Promise.all([
     getCalendarEntriesRange(startDate, endDate),
