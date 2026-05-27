@@ -25,6 +25,7 @@ import type { Task, TaskStatus, TaskPriority, Profile } from '@/types'
 import { Pencil, Trash2, Plus, ListChecks, LayoutGrid, List } from 'lucide-react'
 import { EmptyState } from '@/components/ui/empty-state'
 import { TaskForm } from './TaskForm'
+import { TaskDetailModal } from './TaskDetailModal'
 import { TaskKanbanBoard } from './TaskKanbanBoard'
 import { createTask, updateTask, deleteTask } from '@/app/actions'
 import { toast } from 'sonner'
@@ -41,7 +42,7 @@ export function TaskBoard({ tasks, members, currentProfileId }: TaskBoardProps) 
   const [priorityFilter, setPriorityFilter] = useState<string | null>('all')
   const [assigneeFilter, setAssigneeFilter] = useState<string | null>('all')
   const [createOpen, setCreateOpen] = useState(false)
-  const [editTask, setEditTask] = useState<Task | null>(null)
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list')
 
   const membersMap = useMemo(() => {
@@ -89,10 +90,9 @@ export function TaskBoard({ tasks, members, currentProfileId }: TaskBoardProps) 
     assigned_to: string | null
     due_date: string | null
   }) => {
-    if (!editTask) return
+    if (!selectedTask) return
     try {
-      await updateTask(editTask.id, data)
-      setEditTask(null)
+      await updateTask(selectedTask.id, data)
       toast.success('Tâche mise à jour')
     } catch (e: any) {
       toast.error(e.message || 'Erreur lors de la mise à jour')
@@ -103,6 +103,7 @@ export function TaskBoard({ tasks, members, currentProfileId }: TaskBoardProps) 
     if (!confirm('Supprimer cette tâche ?')) return
     try {
       await deleteTask(id)
+      setSelectedTask(null)
       toast.success('Tâche supprimée')
     } catch (e: any) {
       toast.error(e.message || 'Erreur lors de la suppression')
@@ -210,7 +211,7 @@ export function TaskBoard({ tasks, members, currentProfileId }: TaskBoardProps) 
                       description="Créez votre première tâche pour commencer."
                       action={{
                         label: 'Nouvelle tâche',
-                        onClick: () => setEditTask({} as Task),
+                        onClick: () => setCreateOpen(true),
                       }}
                     />
                   </TableCell>
@@ -248,7 +249,7 @@ export function TaskBoard({ tasks, members, currentProfileId }: TaskBoardProps) 
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => setEditTask(task)}
+                          onClick={() => setSelectedTask(task)}
                         >
                           <Pencil size={14} />
                         </Button>
@@ -270,6 +271,7 @@ export function TaskBoard({ tasks, members, currentProfileId }: TaskBoardProps) 
         </div>
       )}
 
+      {/* ─── Nouvelle tâche (garde TaskForm = uniquement création) ─── */}
       <TaskForm
         open={createOpen}
         onOpenChange={setCreateOpen}
@@ -278,21 +280,14 @@ export function TaskBoard({ tasks, members, currentProfileId }: TaskBoardProps) 
         mode="create"
       />
 
-      {editTask && (
-        <TaskForm
-          open={!!editTask}
-          onOpenChange={() => setEditTask(null)}
+      {/* ─── Édition / Détail (TaskDetailModal unifiée) ─── */}
+      {selectedTask && (
+        <TaskDetailModal
+          task={selectedTask}
+          members={members}
+          onClose={() => setSelectedTask(null)}
           onSubmit={handleUpdate}
-          initial={{
-            title: editTask.title,
-            description: editTask.description,
-            status: editTask.status,
-            priority: editTask.priority,
-            assigned_to: editTask.assigned_to,
-            due_date: editTask.due_date,
-          }}
-          members={members.map((m) => ({ id: m.id, full_name: m.full_name }))}
-          mode="edit"
+          onDelete={handleDelete}
         />
       )}
     </div>

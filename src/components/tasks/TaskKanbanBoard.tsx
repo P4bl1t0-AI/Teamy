@@ -19,7 +19,7 @@ import { TaskCard } from './TaskCard'
 import { KanbanRow } from './KanbanRow'
 import { TaskDetailModal } from './TaskDetailModal'
 import { ReopenDialog } from './ReopenDialog'
-import { updateTaskQuick, addTaskComment } from '@/app/actions'
+import { updateTaskQuick, addTaskComment, updateTask, deleteTask } from '@/app/actions'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 
@@ -224,6 +224,15 @@ export function TaskKanbanBoard({ tasks, members, currentProfileId }: TaskKanban
           task={selectedTask}
           members={members}
           onClose={() => setSelectedTask(null)}
+          onSubmit={async (data) => {
+            await updateTask(selectedTask.id, data)
+            router.refresh()
+          }}
+          onDelete={async (id) => {
+            await deleteTask(id)
+            setSelectedTask(null)
+            router.refresh()
+          }}
         />
       )}
 
