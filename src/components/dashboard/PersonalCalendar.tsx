@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo } from 'react'
 import type { Profile, CalendarEntry, TeamHoliday, PresenceType } from '@/types'
 import { PRESENCE_COLORS, PRESENCE_LABELS, DAY_LABELS } from '@/lib/constants'
 import { formatDateLocal } from '@/lib/utils'
@@ -17,8 +17,8 @@ interface PersonalCalendarProps {
 }
 
 const MONTH_NAMES = [
-  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+  'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août',
+  'Sep', 'Oct', 'Nov', 'Déc',
 ]
 
 function getPresence(
@@ -54,7 +54,7 @@ export function PersonalCalendar({
   const todayStr = formatDateLocal(new Date())
 
   // ─── 90 days from Monday of current week ───
-  const { days, months } = useMemo(() => {
+  const days = useMemo(() => {
     const d = new Date(currentDate)
     const day = d.getDay()
     const diff = (day === 0 ? -6 : 1) - day
@@ -64,24 +64,7 @@ export function PersonalCalendar({
     for (let i = 0; i < 90; i++) {
       result.push(new Date(d.getFullYear(), d.getMonth(), d.getDate() + i))
     }
-
-    // Group by month for headers
-    const monthGroups: { month: number; year: number; startIdx: number; count: number }[] = []
-    result.forEach((date, idx) => {
-      if (idx === 0 || date.getMonth() !== result[idx - 1].getMonth()) {
-        monthGroups.push({
-          month: date.getMonth(),
-          year: date.getFullYear(),
-          startIdx: idx,
-          count: 0,
-        })
-      }
-      if (monthGroups.length > 0) {
-        monthGroups[monthGroups.length - 1].count++
-      }
-    })
-
-    return { days: result, months: monthGroups }
+    return result
   }, [currentDate])
 
   // Group into weeks
@@ -93,9 +76,12 @@ export function PersonalCalendar({
     return w
   }, [days])
 
+  const startDay = days[0]
+  const endDay = days[days.length - 1]
+
   return (
     <div className="space-y-3">
-      {/* Header : navigation */}
+      {/* Header navigation */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={() => onNavigate('prev')}>
@@ -110,106 +96,90 @@ export function PersonalCalendar({
           </Button>
         </div>
         <div className="text-sm text-muted-foreground">
-          {days[0].toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+          {startDay.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
           {' – '}
-          {days[days.length - 1].toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+          {endDay.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
         </div>
       </div>
 
       <div className="rounded-lg border overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[700px]">
+          <table className="w-full text-sm">
             <thead>
-              {/* Month headers */}
-              <tr className="border-b">
-                <th className="p-2 w-10 border-r bg-muted/30" />
-                {months.map((m, idx) => (
-                  <th
-                    key={idx}
-                    colSpan={m.count}
-                    className="p-1.5 text-center text-xs font-semibold bg-muted/30 border-r last:border-r-0"
-                  >
-                    {MONTH_NAMES[m.month]} {m.year}
+              <tr className="bg-muted/50 border-b">
+                <th className="text-left p-2 font-medium text-muted-foreground w-20 sticky left-0 bg-muted/50 z-10 border-r text-xs">
+                  Semaine
+                </th>
+                {DAY_LABELS.map((label) => (
+                  <th key={label} className="p-2 text-center text-xs text-muted-foreground min-w-[44px]">
+                    {label}
                   </th>
                 ))}
               </tr>
-              {/* Day headers */}
-              <tr className="bg-muted/50 border-b">
-                <th className="p-2 w-10 border-r bg-muted/50" />
-                {days.map((date) => {
-                  const dateStr = formatDateLocal(date)
-                  const isToday = dateStr === todayStr
-                  const isWeekend = date.getDay() === 0 || date.getDay() === 6
-                  const dayLabel = DAY_LABELS[date.getDay() === 0 ? 6 : date.getDay() - 1]
-
-                  return (
-                    <th
-                      key={dateStr}
-                      className={`p-1.5 text-center min-w-[36px] ${
-                        isToday ? 'bg-primary/10' : isWeekend ? 'bg-gray-100/50' : ''
-                      }`}
-                    >
-                      <div className={`text-[9px] ${isWeekend ? 'text-gray-400' : 'text-muted-foreground'}`}>
-                        {dayLabel}
-                      </div>
-                      <div className={`text-xs ${isToday ? 'text-primary font-bold' : isWeekend ? 'text-gray-400' : ''}`}>
-                        {date.getDate()}
-                      </div>
-                    </th>
-                  )
-                })}
-              </tr>
             </thead>
             <tbody>
-              {weeks.map((week, weekIdx) => (
-                <tr key={weekIdx} className="border-b last:border-0">
-                  {/* Week number */}
-                  <td className="p-1 text-center border-r bg-muted/20 text-[10px] text-muted-foreground">
-                    S{weekIdx + 1}
-                  </td>
-                  {week.map((date) => {
-                    const dateStr = formatDateLocal(date)
-                    const presence = getPresence(profile, dateStr, entries, holidays)
-                    const isWeekend = date.getDay() === 0 || date.getDay() === 6
-                    const isToday = dateStr === todayStr
-                    const isHoliday = presence === 'holiday'
+              {weeks.map((week, weekIdx) => {
+                const weekStart = week[0]
+                const weekStartStr = `${weekStart.getDate()} ${MONTH_NAMES[weekStart.getMonth()]}`
 
-                    if (isWeekend) {
+                return (
+                  <tr key={weekIdx} className="border-b last:border-0">
+                    {/* Week label */}
+                    <td className="p-2 text-xs text-muted-foreground border-r sticky left-0 bg-background z-10">
+                      {weekStartStr}
+                    </td>
+                    {DAY_LABELS.map((_, dayIdx) => {
+                      const date = week[dayIdx]
+                      if (!date) {
+                        // Semaine incomplète (dernière semaine)
+                        return <td key={dayIdx} className="p-1 bg-gray-50/20" />
+                      }
+
+                      const dateStr = formatDateLocal(date)
+                      const presence = getPresence(profile, dateStr, entries, holidays)
+                      const isWeekend = date.getDay() === 0 || date.getDay() === 6
+                      const isToday = dateStr === todayStr
+                      const isHoliday = presence === 'holiday'
+
+                      if (isWeekend) {
+                        return (
+                          <td
+                            key={dateStr}
+                            className={`p-1 text-center ${isToday ? 'bg-primary/5' : 'bg-gray-50/30'}`}
+                          >
+                            <span className="text-gray-200 text-xs">—</span>
+                          </td>
+                        )
+                      }
+
+                      const colorClasses = presence
+                        ? PRESENCE_COLORS[presence]
+                        : 'bg-gray-50 text-gray-200 border-gray-100'
+                      const bgClass = colorClasses.split(' ')[0]
+                      const textClass = colorClasses.split(' ')[1]
+
                       return (
                         <td
                           key={dateStr}
-                          className={`p-1 text-center bg-gray-50/30 ${isToday ? 'bg-primary/5' : ''}`}
+                          className={`p-1 text-center ${isHoliday ? '' : 'cursor-pointer hover:opacity-80 transition-opacity'} ${
+                            isToday ? 'bg-primary/5' : ''
+                          }`}
+                          onClick={() => !isHoliday && onDateClick(date)}
+                          title={presence ? PRESENCE_LABELS[presence] : 'Non défini'}
                         >
-                          <span className="text-gray-200 text-xs">—</span>
+                          <div
+                            className={`inline-flex items-center justify-center rounded-md w-8 h-8 text-[10px] font-semibold border ${bgClass} ${textClass}`}
+                          >
+                            {presence
+                              ? PRESENCE_LABELS[presence].charAt(0)
+                              : '—'}
+                          </div>
                         </td>
                       )
-                    }
-
-                    const colorClasses = presence ? PRESENCE_COLORS[presence] : 'bg-gray-50 text-gray-200'
-                    const bgClass = presence ? colorClasses.split(' ')[0] : 'bg-gray-50'
-                    const textClass = presence ? colorClasses.split(' ')[1] : 'text-gray-200'
-
-                    return (
-                      <td
-                        key={dateStr}
-                        className={`p-1 text-center ${isHoliday ? '' : 'cursor-pointer hover:opacity-80 transition-opacity'} ${
-                          isToday ? 'bg-primary/5' : ''
-                        }`}
-                        onClick={() => !isHoliday && onDateClick(date)}
-                        title={presence ? PRESENCE_LABELS[presence] : 'Non défini'}
-                      >
-                        <div
-                          className={`inline-flex items-center justify-center rounded-md w-7 h-7 text-[10px] font-medium ${bgClass} ${textClass} border`}
-                        >
-                          {presence
-                            ? PRESENCE_LABELS[presence].charAt(0)
-                            : '—'}
-                        </div>
-                      </td>
-                    )
-                  })}
-                </tr>
-              ))}
+                    })}
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
