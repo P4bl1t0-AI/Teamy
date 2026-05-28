@@ -106,11 +106,11 @@ created_at TIMESTAMPTZ DEFAULT now()
 ## 4. Ce qui est implémenté
 
 ### Pages & Navigation
-- [x] Page d'accueil (`/`) — authentifiée (via proxy)
+- [x] **Dashboard personnel** (`/`) — calendrier 90 jours + tâches + métriques
 - [x] Page `/membres` — gestion des membres
-- [x] Page `/calendrier` — planning 4 semaines
+- [x] Page `/calendrier` — planning 4 semaines collectif
 - [x] Page `/profil` — édition du profil
-- [x] Sidebar navigation : Tâches, Membres, Calendrier, Profil
+- [x] Sidebar navigation : Dashboard, Membres, Calendrier, Profil
 - [x] Design System (`/design-system`) — tokens, composants, dark mode
 
 ### Gestion des tâches

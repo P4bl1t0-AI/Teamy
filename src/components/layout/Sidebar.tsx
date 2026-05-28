@@ -14,7 +14,8 @@ import {
 import { LogOut, Users, ListChecks, Calendar, LayoutDashboard } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { href: '/', label: 'Tâches', icon: ListChecks },
+  { href: '/', label: 'Tableau de bord', icon: LayoutDashboard },
+  { href: '/taches', label: 'Tâches', icon: ListChecks },
   { href: '/membres', label: 'Membres', icon: Users },
   { href: '/calendrier', label: 'Calendrier', icon: Calendar },
 ]
