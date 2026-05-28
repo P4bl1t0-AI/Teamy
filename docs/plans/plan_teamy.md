@@ -2,7 +2,7 @@
 
 **Projet** : Teamy  
 **Statut** : ✅ En production — itération continue  
-**Dernière mise à jour** : 2026-05-27  
+**Dernière mise à jour** : 2026-05-28  
 **URL production** : https://teamy-beryl.vercel.app  
 **Repo local** : `/home/p4bl1/projects/teamy/`
 
@@ -106,11 +106,12 @@ created_at TIMESTAMPTZ DEFAULT now()
 ## 4. Ce qui est implémenté
 
 ### Pages & Navigation
-- [x] **Dashboard personnel** (`/`) — calendrier 90 jours + tâches + métriques
+- [x] **Dashboard personnel** (`/`) — calendrier 90 jours + tâches perso + métriques
+- [x] Page `/taches` — Tâches de l'équipe (vue Liste + Kanban)
 - [x] Page `/membres` — gestion des membres
 - [x] Page `/calendrier` — planning 4 semaines collectif
 - [x] Page `/profil` — édition du profil
-- [x] Sidebar navigation : Dashboard, Membres, Calendrier, Profil
+- [x] Sidebar navigation : Dashboard, Tâches, Membres, Calendrier
 - [x] Design System (`/design-system`) — tokens, composants, dark mode
 
 ### Gestion des tâches
@@ -192,7 +193,7 @@ created_at TIMESTAMPTZ DEFAULT now()
 - [ ] Notifications de conflits (2 personnes clés en congé simultané)
 
 ### Global
-- [ ] Dashboard d'accueil — métriques clés
+- [x] Dashboard d'accueil — métriques clés (implémenté sur `/`)
 - [ ] Command palette (Cmd+K)
 - [ ] Dark mode natif
 - [ ] Responsive mobile (bottom nav, cards full-width)
@@ -210,7 +211,8 @@ created_at TIMESTAMPTZ DEFAULT now()
 6. **Jours fériés récurrents** : stockés avec année fixe en DB, mais `getTeamHolidays(year)` remappe sur l'année demandée.
 7. **Build avant de coder** — toujours lancer `npm run build` au début de session pour s'assurer que l'état de départ est clean.
 8. **Proxy Next.js 16** : `src/proxy.ts` — pas de `export const config`, auth check via `Promise`, pas `async`.
-9. **Plan comme source de vérité** — ce fichier est le plan canonique. Mettre à jour à chaque session.
+9. **PersonalCalendar** : structure tableau HTML doit avoir le même nombre de colonnes dans `<thead>` et `<tbody>`. Header avec 90 colonnes + body avec 7 colonnes = affichage compressé/cassé. Solution : colonnes fixes (semaine + 7 jours) avec semaines en lignes.
+10. **Plan comme source de vérité** — ce fichier est le plan canonique. Mettre à jour à chaque session.
 
 ---
 
@@ -223,13 +225,19 @@ src/
     actions.ts                # Server Actions tâches
     calendar-actions.ts       # Server Actions calendrier
     (dashboard)/
-      page.tsx                # Tâches (liste / kanban)
+      page.tsx                # Dashboard personnel (/)
+      taches/page.tsx         # Tâches équipe (liste + kanban)
       calendrier/page.tsx     # Calendrier
       membres/page.tsx        # Membres
       profil/page.tsx         # Profil
     proxy.ts                  # Route guard (non async)
   components/
     layout/Sidebar.tsx        # Navigation
+    dashboard/
+      DashboardView.tsx       # Dashboard personnel (calendrier + tâches + métriques)
+      PersonalCalendar.tsx    # Calendrier 90 jours (tableau semaines × 7 jours)
+      DashboardTaskColumns.tsx # Colonnes tâches perso (À faire / En cours / Terminé)
+      DashboardTaskCard.tsx   # Carte tâche enrichie (retard, échéance, commentaires)
     tasks/
       TaskBoard.tsx           # Toggle Liste / Kanban + filtres
       TaskKanbanBoard.tsx     # Logique DnD + modals
@@ -286,6 +294,7 @@ supabase/migrations/
 - URL prod : https://teamy-beryl.vercel.app
 - Project : `no-va-s-projects/teamy`
 - Env vars : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+- Routes : `/` (dashboard), `/taches`, `/membres`, `/calendrier`, `/profil`
 
 ### GitHub
 - User : `P4bl1t0-AI`
